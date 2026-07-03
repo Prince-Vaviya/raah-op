@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Map as MapIcon, Route, Lightbulb, Bell, Search, CloudRain, Clock, Menu } from "lucide-react";
+import { LayoutDashboard, Map as MapIcon, Route, Lightbulb, Bell, Search, CloudRain, Clock, Sidebar } from "lucide-react";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -31,13 +31,37 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {/* Sidebar */}
       <aside className={`${isSidebarCollapsed ? 'w-20' : 'w-64'} bg-white border-r border-slate-200 flex flex-col justify-between shrink-0 transition-all duration-300 overflow-visible z-20`}>
         <div>
-          <Link href="/" className="block p-5 group cursor-pointer hover:bg-slate-50 transition-colors">
-            <div className={`flex items-center ${isSidebarCollapsed ? 'justify-center' : 'gap-2'}`}>
-              <img src="/raah_logo.svg" alt="RAAH Logo" className={`${isSidebarCollapsed ? 'w-10 h-10' : 'w-24 h-24'} shrink-0 object-contain transition-all duration-300`} />
-              {!isSidebarCollapsed && <h1 className="text-3xl font-black tracking-tight text-slate-900 group-hover:text-blue-600 transition-colors">RAAH</h1>}
-            </div>
-            {!isSidebarCollapsed && <p className="text-xs text-slate-500 mt-2 whitespace-nowrap">Keeping Mumbai Moving</p>}
-          </Link>
+          <div className="flex items-center justify-between p-5 min-h-[5rem]">
+            {isSidebarCollapsed ? (
+              <div 
+                className="w-full flex justify-center relative group cursor-pointer"
+                onClick={() => setIsSidebarCollapsed(false)}
+              >
+                <img src="/raah_logo.svg" alt="RAAH Logo" className="w-10 h-10 shrink-0 object-contain transition-all duration-300" />
+                
+                {/* Tooltip */}
+                <div className="absolute left-full ml-4 top-1/2 -translate-y-1/2 px-3 py-2 bg-[#2d2f31] text-white text-sm font-medium rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-50 shadow-md flex items-center gap-3 transition-opacity">
+                  <div className="w-5 h-5 rounded border-2 border-white/40 flex items-center justify-center text-[10px]">{'|>'}</div>
+                  Open sidebar
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center justify-between w-full">
+                <Link href="/" className="flex items-center gap-3 group">
+                  <img src="/raah_logo.svg" alt="RAAH Logo" className="w-10 h-10 shrink-0 object-contain" />
+                  <h1 className="text-2xl font-black tracking-tight text-slate-900 group-hover:text-blue-600 transition-colors">RAAH</h1>
+                </Link>
+                <button 
+                  onClick={() => setIsSidebarCollapsed(true)}
+                  className="p-2 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
+                  title="Collapse sidebar"
+                >
+                  <Sidebar size={20} />
+                </button>
+              </div>
+            )}
+          </div>
+
           <nav className="px-4 space-y-2 mt-2">
             <Link href="/" className={getLinkClass("/")}>
               <LayoutDashboard size={20} className="shrink-0" />
@@ -86,12 +110,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {/* Header */}
         <header className="h-20 bg-white border-b border-slate-200 flex items-center justify-between px-8 shrink-0">
           <div className="flex items-center gap-6 flex-1 mr-8">
-            <button 
-              onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)} 
-              className="p-2 -ml-2 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
-            >
-              <Menu size={24} />
-            </button>
             <h2 className="text-2xl font-bold text-slate-900 whitespace-nowrap capitalize">
               {pathname === '/' ? 'Mission Control' : pathname.replace('/', '').replace(/([A-Z])/g, ' $1').trim()}
             </h2>
