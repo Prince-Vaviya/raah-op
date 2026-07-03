@@ -178,7 +178,7 @@ export default function SimulationPanel() {
           </p>
           <button 
             onClick={randomizeCharts}
-            className="flex items-center gap-2 bg-slate-900 hover:bg-blue-600 text-white px-6 py-3 rounded-full font-medium shadow-lg transition-all active:scale-95"
+            className="flex items-center gap-2 bg-slate-900 hover:bg-blue-600 text-white px-6 py-3 rounded-full font-medium shadow-lg transition-all active:scale-95 cursor-pointer"
           >
             <BarChart2 size={18} /> Randomize Charts
           </button>
@@ -191,7 +191,7 @@ export default function SimulationPanel() {
           </p>
           <button 
             onClick={addRandomActivity}
-            className="flex items-center gap-2 bg-slate-900 hover:bg-blue-600 text-white px-6 py-3 rounded-full font-medium shadow-lg transition-all active:scale-95"
+            className="flex items-center gap-2 bg-slate-900 hover:bg-blue-600 text-white px-6 py-3 rounded-full font-medium shadow-lg transition-all active:scale-95 cursor-pointer"
           >
             <Plus size={18} /> Inject Random Activity
           </button>

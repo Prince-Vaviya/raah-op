@@ -6,6 +6,8 @@ type Activity = {
   title: string;
   time: string;
   type: string;
+  description?: string;
+  aiSummary?: string;
 };
 
 type WeeklyData = {
@@ -60,10 +62,38 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   });
 
   const [activities, setActivities] = useState<Activity[]>([
-    { id: 1, title: "Bus Bunching Detected on Route 102", time: "Rt 102 · 2 min ago", type: "error" },
-    { id: 2, title: "Bus B-404 Breakdown – HSR Layout", time: "Rt 404 · 8 min ago", type: "error" },
-    { id: 3, title: "High Occupancy Warning – Route 102", time: "Rt 102 · 15 min ago", type: "warning" },
-    { id: 4, title: "Route 201 Minor Delay – Road Work", time: "Rt 201 · 22 min ago", type: "warning" },
+    { 
+      id: 1, 
+      title: "Bus Bunching Detected on Route 102", 
+      time: "Rt 102 · 2 min ago", 
+      type: "error",
+      description: "Traffic congestion at Silk Board Junction",
+      aiSummary: "Two buses are within 90 seconds of each other near Koramangala. Holding Bus 102B for 3 minutes will restore 8-minute headway with 91% confidence."
+    },
+    { 
+      id: 2, 
+      title: "Bus B-404 Breakdown – HSR Layout", 
+      time: "Rt 404 · 8 min ago", 
+      type: "error",
+      description: "Mechanical failure - engine overheating",
+      aiSummary: "Bus B-404 has stopped at HSR Layout. Recovery team dispatched. Estimated service gap: 25 min. Recommend deploying standby bus from Sector 12 depot."
+    },
+    { 
+      id: 3, 
+      title: "High Occupancy Warning – Route 102", 
+      time: "Rt 102 · 15 min ago", 
+      type: "warning",
+      description: "Passenger load exceeding 90% capacity",
+      aiSummary: "Morning rush crowd is unusually high due to a local event. Consider deploying an extra shuttle on this route for the next 2 hours."
+    },
+    { 
+      id: 4, 
+      title: "Route 201 Minor Delay – Road Work", 
+      time: "Rt 201 · 22 min ago", 
+      type: "warning",
+      description: "Slow traffic near Indiranagar Metro",
+      aiSummary: "Temporary lane closure causing 5-minute delays. Traffic should clear by 11:00 AM based on current flow patterns."
+    },
   ]);
 
   const [weeklyRidership, setWeeklyRidership] = useState<WeeklyData[]>([

@@ -25,25 +25,25 @@ export default function LiveMap() {
         </div>
         <button
           onClick={() => setActiveFilters(prev => ({ ...prev, routes: !prev.routes }))}
-          className={`px-5 py-2 text-sm rounded-full font-medium transition-colors ${activeFilters.routes ? 'bg-blue-500 text-white' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}
+          className={`px-5 py-2 text-sm rounded-full font-medium transition-colors cursor-pointer ${activeFilters.routes ? 'bg-blue-500 text-white' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}
         >
           Routes
         </button>
         <button
           onClick={() => setActiveFilters(prev => ({ ...prev, stops: !prev.stops }))}
-          className={`px-5 py-2 text-sm rounded-full font-medium transition-colors ${activeFilters.stops ? 'bg-blue-500 text-white' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}
+          className={`px-5 py-2 text-sm rounded-full font-medium transition-colors cursor-pointer ${activeFilters.stops ? 'bg-blue-500 text-white' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}
         >
           Stops
         </button>
         <button
           onClick={() => setActiveFilters(prev => ({ ...prev, traffic: !prev.traffic }))}
-          className={`px-5 py-2 text-sm rounded-full font-medium transition-colors ${activeFilters.traffic ? 'bg-blue-500 text-white' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}
+          className={`px-5 py-2 text-sm rounded-full font-medium transition-colors cursor-pointer ${activeFilters.traffic ? 'bg-blue-500 text-white' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}
         >
           Traffic
         </button>
         <button
           onClick={() => setActiveFilters(prev => ({ ...prev, weather: !prev.weather }))}
-          className={`px-5 py-2 text-sm rounded-full font-medium transition-colors ${activeFilters.weather ? 'bg-blue-500 text-white' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}
+          className={`px-5 py-2 text-sm rounded-full font-medium transition-colors cursor-pointer ${activeFilters.weather ? 'bg-blue-500 text-white' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}
         >
           Weather
         </button>
@@ -77,15 +77,15 @@ export default function LiveMap() {
 
       {/* Right side floating controls */}
       <div className="absolute top-1/4 -translate-y-1/2 right-12 flex flex-col gap-1 bg-white rounded-full shadow-lg p-2">
-        <button className="p-3 text-slate-700 hover:bg-slate-100 rounded-full transition-colors">
+        <button className="p-3 text-slate-700 hover:bg-slate-100 rounded-full transition-colors cursor-pointer">
           <AlignJustify size={24} />
         </button>
         <div className="w-8 h-px bg-slate-100 mx-auto"></div>
-        <button className="p-3 text-slate-700 hover:bg-slate-100 rounded-full transition-colors">
+        <button className="p-3 text-slate-700 hover:bg-slate-100 rounded-full transition-colors cursor-pointer">
           <Layers size={24} />
         </button>
         <div className="w-8 h-px bg-slate-100 mx-auto"></div>
-        <button className="p-3 text-slate-700 hover:bg-slate-100 rounded-full transition-colors">
+        <button className="p-3 text-slate-700 hover:bg-slate-100 rounded-full transition-colors cursor-pointer">
           <Crosshair size={24} />
         </button>
       </div>

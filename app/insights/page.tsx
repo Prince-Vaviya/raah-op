@@ -24,10 +24,10 @@ export default function Insights() {
         </div>
 
         <div className="absolute right-12 top-1/2 -translate-y-1/2 flex items-center gap-2 bg-white/50 backdrop-blur-sm p-1.5 rounded-full shadow-sm border border-white">
-          <button className="px-4 py-1.5 text-sm font-medium text-slate-600 rounded-full hover:bg-white transition-colors">Today</button>
-          <button className="px-4 py-1.5 text-sm font-medium text-white bg-blue-500 rounded-full shadow-sm">7D</button>
-          <button className="px-4 py-1.5 text-sm font-medium text-slate-600 rounded-full hover:bg-white transition-colors">30D</button>
-          <button className="px-4 py-1.5 text-sm font-medium text-slate-600 rounded-full hover:bg-white transition-colors">Custom</button>
+          <button className="px-4 py-1.5 text-sm font-medium text-slate-600 rounded-full hover:bg-white transition-colors cursor-pointer">Today</button>
+          <button className="px-4 py-1.5 text-sm font-medium text-white bg-blue-500 rounded-full shadow-sm cursor-pointer">7D</button>
+          <button className="px-4 py-1.5 text-sm font-medium text-slate-600 rounded-full hover:bg-white transition-colors cursor-pointer">30D</button>
+          <button className="px-4 py-1.5 text-sm font-medium text-slate-600 rounded-full hover:bg-white transition-colors cursor-pointer">Custom</button>
         </div>
       </div>
 
