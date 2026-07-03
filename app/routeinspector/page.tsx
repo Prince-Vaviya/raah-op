@@ -1,10 +1,326 @@
+"use client";
+import React, { useState } from "react";
+import { Search, ChevronRight, Bus } from "lucide-react";
+
 export default function RouteInspector() {
+  const [selectedRoute, setSelectedRoute] = useState<number | null>(101);
+
+  const routes = [
+    {
+      id: 101,
+      title: "Central - Airport Express",
+      path: "Ulve Airport",
+      status: "Operational",
+      color: "bg-blue-500",
+      statusColor: "text-emerald-700 bg-emerald-100",
+      statusDot: "bg-emerald-500",
+      buses: 8,
+      headway: 12,
+      delay: "+1.2",
+      crowding: 62,
+      score: 94,
+      scoreColor: "bg-emerald-500"
+    },
+    {
+      id: 102,
+      title: "MG Road - Flamingo City",
+      path: "Seawoods",
+      status: "Delayed",
+      color: "bg-amber-500",
+      statusColor: "text-amber-700 bg-amber-50",
+      statusDot: "bg-amber-500",
+      buses: 11,
+      headway: 8,
+      delay: "+9.4",
+      crowding: 88,
+      score: 61,
+      scoreColor: "bg-amber-500"
+    },
+    {
+      id: 210,
+      title: "HSR - BTM Express",
+      path: "Sanpada",
+      status: "Disrupted",
+      color: "bg-red-500",
+      statusColor: "text-red-700 bg-red-50",
+      statusDot: "bg-red-500",
+      buses: 4,
+      headway: 22,
+      delay: "+23.1",
+      crowding: 82,
+      score: 34,
+      scoreColor: "bg-red-500"
+    }
+  ];
+
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-12 flex flex-col items-center justify-center min-h-[60vh]">
-      <h2 className="text-2xl font-bold text-slate-800 mb-2">Route Inspector</h2>
-      <p className="text-slate-500 text-center max-w-md">
-        This is a placeholder for the Route Inspector feature. Granular tracking of individual buses and routes will be displayed here.
-      </p>
+    <div className="relative min-h-screen">
+      {/* Background Decor */}
+      <div className="absolute top-0 left-0 right-0 h-64 bg-gradient-to-br from-blue-100 to-blue-50 rounded-b-[4rem] -z-10 overflow-hidden">
+        <div className="absolute -right-20 -top-20 w-96 h-96 bg-blue-200/50 rounded-full blur-3xl"></div>
+      </div>
+
+      {/* Header */}
+      <div className="flex justify-between items-start mb-8">
+        <div>
+          <h1 className="text-4xl font-black text-slate-900 tracking-tight">Routes</h1>
+          <p className="text-slate-600 mt-1 font-medium">3 routes · 1 operational</p>
+        </div>
+
+        <div className="flex items-center gap-6">
+          <img
+            src="/mascot-bird-route-inspector.png"
+            alt="Mascot"
+            className="w-48 h-auto object-contain -mt-8"
+          />
+        </div>
+      </div>
+
+      {/* Routes List */}
+      <div className="space-y-4 mb-12">
+        {routes.map((route) => (
+          <div
+            key={route.id}
+            onClick={() => setSelectedRoute(route.id)}
+            className={`bg-white rounded-3xl p-6 shadow-sm hover:shadow-md transition-all cursor-pointer border-2 ${selectedRoute === route.id ? 'border-blue-400' : 'border-transparent'}`}
+          >
+            <div className="flex items-center justify-between">
+              {/* Left: Icon & Title */}
+              <div className="flex items-center gap-6 w-1/3">
+                <div className={`w-14 h-14 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-inner ${route.color}`} style={{ borderBottomRightRadius: 4 }}>
+                  {route.id}
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-slate-900">{route.title}</h3>
+                  <p className="text-slate-500 text-sm mt-0.5">{route.path}</p>
+                </div>
+              </div>
+
+              {/* Status */}
+              <div className="w-1/6">
+                <span className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-semibold ${route.statusColor}`}>
+                  <span className={`w-2 h-2 rounded-full ${route.statusDot}`}></span>
+                  {route.status}
+                </span>
+              </div>
+
+              {/* Metrics */}
+              <div className="flex items-center gap-8 w-1/3 justify-between">
+                <div className="text-center">
+                  <div className="font-bold text-slate-900 text-lg">{route.buses}</div>
+                  <div className="text-xs text-slate-500">Buses</div>
+                </div>
+                <div className="text-center">
+                  <div className="font-bold text-slate-900 text-lg">{route.headway}<span className="text-sm">m</span></div>
+                  <div className="text-xs text-slate-500">Headway</div>
+                </div>
+                <div className="text-center">
+                  <div className="font-bold text-slate-900 text-lg">{route.delay}<span className="text-sm">m</span></div>
+                  <div className="text-xs text-slate-500">Avg Delay</div>
+                </div>
+                <div className="text-center">
+                  <div className="font-bold text-slate-900 text-lg">{route.crowding}%</div>
+                  <div className="text-xs text-slate-500">Crowding</div>
+                </div>
+              </div>
+
+              {/* Score */}
+              <div className="flex items-center gap-4 w-1/6 justify-end">
+                <div className="flex flex-col items-end gap-1 w-full max-w-[120px]">
+                  <span className="text-xs text-slate-400 font-medium">Health Score</span>
+                  <div className="flex items-center gap-3 w-full">
+                    <div className="h-2 flex-1 bg-slate-100 rounded-full overflow-hidden">
+                      <div className={`h-full ${route.scoreColor}`} style={{ width: `${route.score}%` }}></div>
+                    </div>
+                    <span className={`font-bold ${route.statusColor.split(' ')[0]}`}>{route.score}</span>
+                  </div>
+                </div>
+                <ChevronRight className="text-slate-300" />
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Comparison Dashboard (Expands when route selected) */}
+      {selectedRoute && (
+        <div className="bg-white rounded-[2rem] shadow-lg p-8 border border-slate-100 mb-12">
+          <div className="flex gap-8">
+
+            {/* With Raah */}
+            <div className="flex-1 bg-slate-50/50 rounded-3xl p-8 border border-slate-100 relative">
+              <div className="absolute -top-4 left-8 bg-blue-100 text-blue-700 font-bold px-6 py-2 rounded-full shadow-sm">With Raah</div>
+
+              {/* Timeline */}
+              <div className="mt-8 mb-4 relative px-4">
+                <div className="absolute top-1/2 left-4 right-4 h-1.5 bg-slate-200 -translate-y-1/2 rounded-full"></div>
+                <div className="flex justify-between relative z-10">
+                  {['Andheri', 'Jogeshwari', 'Goregaon', 'Malad', 'Kandivali', 'Borivali'].map((stop, i) => (
+                    <div key={stop} className="flex flex-col items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center shadow-md">
+                        <Bus size={16} />
+                      </div>
+                      <span className="text-xs font-semibold text-slate-500">{stop}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="text-center mb-8 text-sm text-slate-500 font-medium italic leading-relaxed py-1">
+                Buses are evenly spaced, eliminating long waits.
+              </div>
+
+              {/* Metrics Grid */}
+              <div className="grid grid-cols-4 gap-4 mb-8">
+                <div className="bg-blue-50 p-3 rounded-2xl flex flex-col h-full">
+                  <div className="text-xs text-blue-600/70 font-semibold mb-2">Avg Wait Time</div>
+                  <div className="mt-auto">
+                    <div className="text-xl font-black text-blue-700">5 min</div>
+                    <div className="text-xs text-blue-600 mt-1 whitespace-nowrap">Stable ↗</div>
+                  </div>
+                </div>
+                <div className="bg-blue-50 p-3 rounded-2xl flex flex-col h-full">
+                  <div className="text-xs text-blue-600/70 font-semibold mb-2">Reliability</div>
+                  <div className="mt-auto">
+                    <div className="text-xl font-black text-blue-700">87%</div>
+                    <div className="text-xs text-blue-600 mt-1 whitespace-nowrap">Excellent ✓</div>
+                  </div>
+                </div>
+                <div className="bg-blue-50 p-3 rounded-2xl flex flex-col h-full">
+                  <div className="text-xs text-blue-600/70 font-semibold mb-2">Bunching Events</div>
+                  <div className="mt-auto">
+                    <div className="text-xl font-black text-blue-700">3</div>
+                    <div className="text-xs text-blue-600 mt-1 whitespace-nowrap">Controlled ✓</div>
+                  </div>
+                </div>
+                <div className="bg-blue-50 p-3 rounded-2xl flex flex-col h-full">
+                  <div className="text-xs text-blue-600/70 font-semibold mb-2">Passenger Complaints</div>
+                  <div className="mt-auto">
+                    <div className="text-xl font-black text-blue-700">Low</div>
+                    <div className="text-xs text-blue-600 mt-1 whitespace-nowrap">Minimal ✓</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-between items-center px-6 py-4 bg-white rounded-2xl border border-slate-100 shadow-sm">
+                <span className="font-bold text-slate-600">Passenger Served</span>
+                <span className="text-2xl font-black text-blue-600">4,320</span>
+              </div>
+            </div>
+
+            {/* Without Raah */}
+            <div className="flex-1 rounded-3xl p-8 border border-slate-100 relative opacity-90">
+              <div className="absolute -top-4 right-8 bg-slate-100 text-slate-600 font-bold px-6 py-2 rounded-full shadow-sm">Without Raah</div>
+
+              {/* Timeline */}
+              <div className="mt-8 mb-4 relative px-4">
+                <div className="absolute top-1/2 left-4 right-4 h-1.5 bg-slate-200 -translate-y-1/2 rounded-full"></div>
+                <div className="flex justify-between relative z-10">
+                  {['Andheri', 'Jogeshwari', 'Goregaon', 'Malad', 'Kandivali', 'Borivali'].map((stop, i) => (
+                    <div key={stop} className="flex flex-col items-center gap-3 relative">
+                      <div className="w-4 h-4 rounded-full bg-slate-400 shadow-sm mt-2"></div>
+
+                      {/* Simulate Bunching */}
+                      {i === 1 && (
+                        <div className="absolute -top-8 flex gap-1">
+                          <div className="w-7 h-7 rounded-full bg-red-500 text-white flex items-center justify-center shadow-md"><Bus size={14} /></div>
+                          <div className="w-7 h-7 rounded-full bg-red-500 text-white flex items-center justify-center shadow-md"><Bus size={14} /></div>
+                          <div className="w-7 h-7 rounded-full bg-red-500 text-white flex items-center justify-center shadow-md"><Bus size={14} /></div>
+                        </div>
+                      )}
+                      {i === 3 && (
+                        <div className="absolute -top-8 flex gap-1">
+                          <div className="w-7 h-7 rounded-full bg-red-500 text-white flex items-center justify-center shadow-md"><Bus size={14} /></div>
+                          <div className="w-7 h-7 rounded-full bg-red-500 text-white flex items-center justify-center shadow-md"><Bus size={14} /></div>
+                        </div>
+                      )}
+
+                      <span className="text-xs font-semibold text-slate-500 mt-3">{stop}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="text-center mb-8 text-sm text-slate-500 font-medium italic leading-relaxed py-1">
+                Buses bunch together, causing severe delays.
+              </div>
+
+              {/* Metrics Grid */}
+              <div className="grid grid-cols-4 gap-4 mb-8">
+                <div className="bg-red-50 p-3 rounded-2xl border border-red-100 flex flex-col h-full">
+                  <div className="text-xs text-red-600/70 font-semibold mb-2">Avg Wait Time</div>
+                  <div className="mt-auto">
+                    <div className="text-xl font-black text-red-700">15 min</div>
+                    <div className="text-xs text-red-600 mt-1 whitespace-nowrap">↑ Increasing</div>
+                  </div>
+                </div>
+                <div className="bg-red-50 p-3 rounded-2xl border border-red-100 flex flex-col h-full">
+                  <div className="text-xs text-red-600/70 font-semibold mb-2">Reliability</div>
+                  <div className="mt-auto">
+                    <div className="text-xl font-black text-red-700">53%</div>
+                    <div className="text-xs text-red-600 mt-1 whitespace-nowrap">↓ Declining</div>
+                  </div>
+                </div>
+                <div className="bg-red-50 p-3 rounded-2xl border border-red-100 flex flex-col h-full">
+                  <div className="text-xs text-red-600/70 font-semibold mb-2">Bunching Events</div>
+                  <div className="mt-auto">
+                    <div className="text-xl font-black text-red-700">17</div>
+                    <div className="text-xs text-red-600 mt-1 whitespace-nowrap">▲ Critical</div>
+                  </div>
+                </div>
+                <div className="bg-red-50 p-3 rounded-2xl border border-red-100 flex flex-col h-full">
+                  <div className="text-xs text-red-600/70 font-semibold mb-2">Passenger Complaints</div>
+                  <div className="mt-auto">
+                    <div className="text-xl font-black text-red-700">High</div>
+                    <div className="text-xs text-red-600 mt-1 whitespace-nowrap">Severe</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-between items-center px-6 py-4 bg-red-50 rounded-2xl border border-red-100 shadow-sm">
+                <span className="font-bold text-red-800/60">Passenger Served</span>
+                <span className="text-2xl font-black text-red-600">1,252</span>
+              </div>
+            </div>
+
+          </div>
+
+          {/* Bottom Global Status Bars */}
+          <div className="mt-8 pt-8 border-t border-slate-100 flex items-center justify-between gap-12 px-8">
+            <div className="flex-1">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-sm font-bold text-slate-500">Traffic Congestion</span>
+                <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded">30%</span>
+              </div>
+              <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden flex">
+                <div className="h-full bg-gradient-to-r from-emerald-400 to-red-400 w-1/3"></div>
+              </div>
+            </div>
+
+            <div className="flex-1">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-sm font-bold text-slate-500">Passenger Demand</span>
+                <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded">Medium</span>
+              </div>
+              <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden flex">
+                <div className="h-full bg-gradient-to-r from-emerald-400 via-amber-400 to-red-400 w-1/2"></div>
+              </div>
+            </div>
+
+            <div className="flex-1">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-sm font-bold text-slate-500">Time of the day</span>
+                <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded">9 AM</span>
+              </div>
+              <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden flex">
+                <div className="h-full bg-gradient-to-r from-emerald-400 via-emerald-400 to-red-400 w-1/4"></div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      )}
+
     </div>
   );
 }
