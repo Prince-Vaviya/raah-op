@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { LayoutDashboard, Map as MapIcon, Route, Lightbulb, Bell, Search, CloudRain, Clock, ArrowRight, AlertTriangle, AlertCircle, PlayCircle, Zap } from "lucide-react";
 
 export default function MissionControl() {
@@ -25,15 +26,28 @@ export default function MissionControl() {
     { id: 4, title: 'Route 201 Minor Delay – Road Work', time: 'Rt 201 · 22 min ago', type: 'warning' },
   ]);
 
+  const [weeklyRidership] = useState([
+    { day: 'Mon', val: 40 },
+    { day: 'Tue', val: 55 },
+    { day: 'Wed', val: 45 },
+    { day: 'Thu', val: 70 },
+    { day: 'Fri', val: 85 },
+    { day: 'Sat', val: 95 },
+    { day: 'Sun', val: 65 }
+  ]);
+
   return (
     <div className="flex h-screen w-full bg-[#f4f7fb] text-slate-800 font-sans overflow-hidden">
       {/* Sidebar */}
       <aside className="w-64 bg-white border-r border-slate-200 flex flex-col justify-between shrink-0">
         <div>
-          <div className="p-6">
-            <h1 className="text-2xl font-black tracking-tight text-slate-900">RAAH</h1>
-            <p className="text-xs text-slate-500 mt-1">Keeping Mumbai Moving</p>
-          </div>
+          <Link href="/" className="block p-5 group cursor-pointer hover:bg-slate-50 transition-colors">
+            <div className="flex items-center gap-2">
+              <img src="/assets/raah_logo.svg" alt="RAAH Logo" className="w-24 h-24 object-contain" />
+              <h1 className="text-3xl font-black tracking-tight text-slate-900 group-hover:text-blue-600 transition-colors">RAAH</h1>
+            </div>
+            <p className="text-xs text-slate-500 mt-2">Keeping Mumbai Moving</p>
+          </Link>
           <nav className="px-4 space-y-1">
             <a href="#" className="flex items-center gap-3 px-3 py-2 bg-blue-50 text-blue-700 rounded-lg font-medium">
               <LayoutDashboard size={20} /> Mission Control
@@ -59,7 +73,7 @@ export default function MissionControl() {
         <div className="p-4 mt-auto">
           <div className="bg-blue-50 rounded-xl p-4 text-center">
             <div className="w-16 h-16 mx-auto mb-2 overflow-hidden flex items-center justify-center">
-              <img src="/assets/mascot_bird_megaphone.png" alt="Mascot" className="w-full h-full object-contain" />
+              <img src="/assets/mascot_bird_megaphone Background Removed.svg" alt="Mascot" className="w-full h-full object-contain" />
             </div>
             <p className="text-sm font-semibold text-blue-700">Hello Operator!</p>
             <p className="text-xs text-slate-600 mt-1">Let's make Mumbai move smarter today!</p>
@@ -100,7 +114,7 @@ export default function MissionControl() {
             <div className="flex items-center gap-4 pl-4 border-l border-slate-200">
               <div className="relative">
                 <div className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center overflow-hidden">
-                  <img src="/assets/avatar_operator.png" alt="Profile" className="w-full h-full object-cover" />
+                  <img src="/assets/avatar_operator.svg" alt="Profile" className="w-full h-full object-cover" />
                 </div>
                 <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 border-2 border-white rounded-full"></span>
               </div>
@@ -148,7 +162,7 @@ export default function MissionControl() {
               <div className="col-span-2 space-y-6">
                 {/* Map Preview */}
                 <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm relative h-96 group">
-                  <img src="/assets/map_preview.png" alt="Map Preview" className="w-full h-full object-cover" />
+                  <img src="/assets/map_preview.svg" alt="Map Preview" className="w-full h-full object-cover" />
                   <div className="absolute top-4 left-4 bg-white/90 backdrop-blur px-4 py-2 rounded-lg font-semibold text-slate-800 shadow-sm border border-slate-100">
                     Live Map Preview
                   </div>
@@ -171,15 +185,7 @@ export default function MissionControl() {
 
                   {/* CSS Bar Chart */}
                   <div className="h-48 flex items-end justify-between gap-4 pt-4 border-t border-slate-100">
-                    {[
-                      { day: 'Mon', val: 40 },
-                      { day: 'Tue', val: 55 },
-                      { day: 'Wed', val: 45 },
-                      { day: 'Thu', val: 70 },
-                      { day: 'Fri', val: 85 },
-                      { day: 'Sat', val: 95 },
-                      { day: 'Sun', val: 65 }
-                    ].map((d, i) => (
+                    {weeklyRidership.map((d, i) => (
                       <div key={i} className="flex-1 flex flex-col items-center gap-2 group">
                         <div className="w-full bg-blue-100 rounded-t-sm relative transition-all group-hover:bg-blue-200" style={{ height: `${d.val}%` }}>
                           <div className="absolute -top-6 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 text-xs font-bold text-slate-700 transition-opacity">
@@ -231,7 +237,7 @@ export default function MissionControl() {
 
                 {/* Mascot Decor */}
                 <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 flex items-center justify-center h-48 relative overflow-hidden">
-                  <img src="/assets/mascot_bird_standing.png" alt="Mascot" className="h-32 object-contain" />
+                  <img src="/assets/mascot_bird_standing Background Removed.svg" alt="Mascot" className="h-32 object-contain" />
                   <div className="absolute inset-0 bg-gradient-to-t from-white/80 to-transparent pointer-events-none"></div>
                 </div>
 
