@@ -138,8 +138,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </header>
 
         {/* Dashboard Content */}
-        <div className="flex-1 overflow-auto p-8">
-          <div className="max-w-7xl mx-auto space-y-6">
+        <div className={`flex-1 overflow-hidden relative ${pathname === '/livemap' ? '' : 'p-8 overflow-auto'}`}>
+          <div className={pathname === '/livemap' ? 'w-full h-full' : 'max-w-7xl mx-auto space-y-6'}>
             {children}
           </div>
         </div>
