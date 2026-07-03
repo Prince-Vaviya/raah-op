@@ -1,5 +1,6 @@
 "use client";
 import { useData } from "../providers/DataProvider";
+import Link from "next/link";
 import { Route, Lightbulb, ArrowRight, AlertTriangle, AlertCircle, PlayCircle, Zap } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip } from 'recharts';
 
@@ -41,9 +42,11 @@ export default function MissionControl() {
             <div className="absolute top-4 left-4 bg-white/90 backdrop-blur px-4 py-2 rounded-lg font-semibold text-slate-800 shadow-sm border border-slate-100">
               Live Map Preview
             </div>
-            <button className="absolute bottom-4 right-4 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-full font-medium shadow-lg flex items-center gap-2 transition-colors">
-              Full Map <ArrowRight size={16} />
-            </button>
+            <Link href="/livemap">
+              <button className="absolute bottom-4 right-4 cursor-pointer bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-full font-medium shadow-lg flex items-center gap-2 transition-colors">
+                Full Map <ArrowRight size={16} />
+              </button>
+            </Link>
           </div>
 
           {/* Weekly Chart Placeholder */}
@@ -64,34 +67,34 @@ export default function MissionControl() {
                 <AreaChart data={weeklyRidership} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
                   <defs>
                     <linearGradient id="colorVal" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.1}/>
-                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.1} />
+                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                  <XAxis 
-                    dataKey="day" 
-                    axisLine={false} 
-                    tickLine={false} 
-                    tick={{ fill: '#94a3b8', fontSize: 12 }} 
-                    dy={10} 
+                  <XAxis
+                    dataKey="day"
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: '#94a3b8', fontSize: 12 }}
+                    dy={10}
                   />
-                  <YAxis 
-                    axisLine={false} 
-                    tickLine={false} 
-                    tick={{ fill: '#94a3b8', fontSize: 12 }} 
+                  <YAxis
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: '#94a3b8', fontSize: 12 }}
                     tickFormatter={(value) => `${value}k`}
                   />
-                  <Tooltip 
+                  <Tooltip
                     contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                   />
-                  <Area 
-                    type="monotone" 
-                    dataKey="val" 
-                    stroke="#3b82f6" 
+                  <Area
+                    type="monotone"
+                    dataKey="val"
+                    stroke="#3b82f6"
                     strokeWidth={2}
-                    fillOpacity={1} 
-                    fill="url(#colorVal)" 
+                    fillOpacity={1}
+                    fill="url(#colorVal)"
                     activeDot={{ r: 6, fill: '#3b82f6', stroke: '#fff', strokeWidth: 2 }}
                   />
                 </AreaChart>
