@@ -113,14 +113,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <h2 className="text-2xl font-bold text-slate-900 whitespace-nowrap capitalize">
               {pathname === '/' ? 'Mission Control' : pathname.replace('/', '').replace(/([A-Z])/g, ' $1').trim()}
             </h2>
-            <div className="relative w-full max-w-xl">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-              <input
-                type="text"
-                placeholder="Search routes, buses, or alerts..."
-                className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-              />
-            </div>
           </div>
 
           <div className="flex items-center gap-8">

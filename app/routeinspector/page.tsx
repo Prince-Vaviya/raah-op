@@ -4,6 +4,7 @@ import { Search, ChevronRight, Bus } from "lucide-react";
 
 export default function RouteInspector() {
   const [selectedRoute, setSelectedRoute] = useState<number | null>(101);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const routes = [
     {
@@ -53,6 +54,12 @@ export default function RouteInspector() {
     }
   ];
 
+  const filteredRoutes = routes.filter(route => 
+    route.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    route.path.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    route.id.toString().includes(searchQuery)
+  );
+
   return (
     <div className="relative min-h-screen">
       {/* Background Decor */}
@@ -62,9 +69,20 @@ export default function RouteInspector() {
 
       {/* Header */}
       <div className="flex justify-between items-start mb-8">
-        <div>
+        <div className="flex-1">
           <h1 className="text-4xl font-black text-slate-900 tracking-tight">Routes</h1>
-          <p className="text-slate-600 mt-1 font-medium">3 routes · 1 operational</p>
+          <p className="text-slate-600 mt-1 font-medium">{filteredRoutes.length} routes · 1 operational</p>
+          
+          <div className="relative w-full max-w-md mt-6">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+            <input
+              type="text"
+              placeholder="Search routes by name, number, or path..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-12 pr-4 py-3 bg-white/80 backdrop-blur border border-slate-200 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm shadow-sm transition-all placeholder:text-slate-400"
+            />
+          </div>
         </div>
 
         <div className="flex items-center gap-6">
@@ -78,8 +96,13 @@ export default function RouteInspector() {
 
       {/* Routes List */}
       <div className="space-y-4 mb-12">
-        {routes.map((route) => (
-          <div
+        {filteredRoutes.length === 0 ? (
+          <div className="text-center py-12 text-slate-500 bg-white rounded-3xl border border-slate-100 shadow-sm">
+            No routes found matching "{searchQuery}"
+          </div>
+        ) : (
+          filteredRoutes.map((route) => (
+            <div
             key={route.id}
             onClick={() => setSelectedRoute(route.id)}
             className={`bg-white rounded-3xl p-6 shadow-sm hover:shadow-md transition-all cursor-pointer border-2 ${selectedRoute === route.id ? 'border-blue-400' : 'border-transparent'}`}
@@ -139,7 +162,8 @@ export default function RouteInspector() {
               </div>
             </div>
           </div>
-        ))}
+          ))
+        )}
       </div>
 
       {/* Comparison Dashboard (Expands when route selected) */}
@@ -317,7 +341,6 @@ export default function RouteInspector() {
               </div>
             </div>
           </div>
-
         </div>
       )}
 

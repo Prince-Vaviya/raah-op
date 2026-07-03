@@ -4,15 +4,31 @@ import { useData } from "../../providers/DataProvider";
 import { AlertTriangle, RefreshCw, Zap, Eye, Check, AlertCircle, Cross, CrossIcon, X } from "lucide-react";
 
 export default function Alerts() {
-  const { activities } = useData();
+  const { activities, setActivities } = useData();
   const [filter, setFilter] = useState<'all' | 'error' | 'warning' | 'resolved'>('all');
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [history, setHistory] = useState<{alert: any, action: 'approved' | 'rejected', timestamp: string}[]>([]);
 
   const handleRefresh = () => {
     setIsRefreshing(true);
     setTimeout(() => {
       setIsRefreshing(false);
     }, 750);
+  };
+
+  const handleAction = (alertId: number, action: 'approved' | 'rejected') => {
+    const alert = activities.find(a => a.id === alertId);
+    if (!alert) return;
+    
+    // Remove from main list
+    setActivities(prev => prev.filter(a => a.id !== alertId));
+    
+    // Add to history
+    setHistory(prev => [{
+      alert,
+      action,
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    }, ...prev]);
   };
 
   const criticalCount = activities.filter(a => a.type === 'error').length;
@@ -101,6 +117,10 @@ export default function Alerts() {
               </div>
             </div>
           ))
+        ) : filter === 'resolved' ? (
+          <div className="text-center py-12 text-slate-500 bg-white rounded-2xl border border-slate-100 shadow-sm">
+            Check the history section below for resolved alerts.
+          </div>
         ) : filteredActivities.length === 0 ? (
           <div className="text-center py-12 text-slate-500 bg-white rounded-2xl border border-slate-100 shadow-sm">
             No alerts found for this filter.
@@ -138,10 +158,16 @@ export default function Alerts() {
                 )}
 
                 <div className="flex items-center gap-3 pt-2">
-                  <button className="flex items-center gap-2 px-5 py-2 cursor-pointer bg-[#ffffff] hover:bg-[#f46666] hover:text-white border border-slate-200 text-slate-600 rounded-full transition-colors text-sm font-medium">
+                  <button 
+                    onClick={() => handleAction(alert.id, 'rejected')}
+                    className="flex items-center gap-2 px-5 py-2 cursor-pointer bg-[#ffffff] hover:bg-[#f46666] hover:text-white border border-slate-200 text-slate-600 rounded-full transition-colors text-sm font-medium"
+                  >
                     <X size={16} /> Reject Action
                   </button>
-                  <button className="flex items-center gap-2 px-5 py-2 cursor-pointer bg-[#10b981] hover:bg-[#059669] text-white rounded-full shadow-sm transition-colors text-sm font-medium">
+                  <button 
+                    onClick={() => handleAction(alert.id, 'approved')}
+                    className="flex items-center gap-2 px-5 py-2 cursor-pointer bg-[#10b981] hover:bg-[#059669] text-white rounded-full shadow-sm transition-colors text-sm font-medium"
+                  >
                     <Check size={16} /> Approve Action
                   </button>
                 </div>
@@ -150,6 +176,34 @@ export default function Alerts() {
           ))
         )}
       </div>
+
+      {/* History Section */}
+      {history.length > 0 && (
+        <div className="mt-12 pt-8 border-t border-slate-200">
+          <h2 className="text-xl font-bold text-slate-800 mb-6">Action History</h2>
+          <div className="space-y-4">
+            {history.map((item, index) => (
+              <div key={index} className="bg-white rounded-xl border border-slate-100 shadow-sm p-4 flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className={`w-10 h-10 rounded-full shrink-0 flex items-center justify-center ${item.action === 'approved' ? 'bg-emerald-50 text-emerald-500' : 'bg-red-50 text-red-500'}`}>
+                    {item.action === 'approved' ? <Check size={20} /> : <X size={20} />}
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-slate-800">{item.alert.title}</h4>
+                    <p className="text-sm text-slate-500">{item.alert.time} {item.alert.description ? `· ${item.alert.description}` : ''}</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold ${item.action === 'approved' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
+                    {item.action === 'approved' ? 'Approved' : 'Rejected'}
+                  </span>
+                  <p className="text-xs text-slate-400 mt-1">{item.timestamp}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
