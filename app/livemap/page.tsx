@@ -59,7 +59,9 @@ export default function LiveMap() {
             trip_id: f.properties.trip_id,
             lat: f.geometry.coordinates[1],
             lng: f.geometry.coordinates[0],
-            forward_headway: f.properties.headway
+            forward_headway: f.properties.headway,
+            bus_number: f.properties.bus_number,
+            route_name: f.properties.route_name
           })));
         }
 
@@ -258,13 +260,21 @@ export default function LiveMap() {
                 {isDelayed && (
                   <div className="absolute -inset-4 bg-red-500/20 rounded-full animate-ping z-0 pointer-events-none"></div>
                 )}
-                <div className={`relative z-10 w-10 h-10 rounded-xl shadow-lg flex items-center justify-center transition-transform group-hover:scale-110 ${isDelayed ? 'bg-red-500 text-white shadow-red-500/30' : 'bg-blue-500 text-white shadow-blue-500/30'}`}>
-                  <Train size={24} />
+                <div className={`relative z-10 w-8 h-12 flex items-center justify-center transition-transform group-hover:scale-110`}>
+                  <img src="/bus-top.svg" alt="Bus" className="w-full h-full drop-shadow-md" style={{ filter: isDelayed ? 'hue-rotate(0deg)' : 'hue-rotate(220deg)' }} />
                   {isDelayed && (
-                    <div className="absolute -top-2 -right-2 bg-amber-400 text-amber-950 p-1 rounded-full shadow-sm">
+                    <div className="absolute -top-2 -right-2 bg-amber-400 text-amber-950 p-1 rounded-full shadow-sm z-20">
                       <AlertTriangle size={12} />
                     </div>
                   )}
+                  {/* Tooltip on hover */}
+                  <div className="absolute bottom-full mb-2 hidden group-hover:flex flex-col items-center z-30">
+                    <div className="bg-slate-800 text-white text-xs rounded px-2 py-1 whitespace-nowrap shadow-lg flex flex-col items-center">
+                      <span className="font-bold">{bus.bus_number || 'Bus'}</span>
+                      <span className="text-slate-300">Route {bus.route_name || 'Unknown'}</span>
+                    </div>
+                    <div className="w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[4px] border-t-slate-800"></div>
+                  </div>
                 </div>
               </div>
             </Marker>

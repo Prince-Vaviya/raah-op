@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 200" width="100%" height="100%">
+  <!-- Bus Body -->
+  <rect x="10" y="10" width="80" height="180" rx="15" ry="15" fill="#EF4444" stroke="#B91C1C" stroke-width="4"/>
+  
+  <!-- Roof -->
+  <rect x="20" y="30" width="60" height="140" rx="5" ry="5" fill="#F87171"/>
+  
+  <!-- Front Windshield -->
+  <rect x="15" y="15" width="70" height="20" rx="4" ry="4" fill="#1E3A8A" opacity="0.8"/>
+  
+  <!-- Rear Windshield -->
+  <rect x="15" y="165" width="70" height="15" rx="3" ry="3" fill="#1E3A8A" opacity="0.8"/>
+  
+  <!-- AC Unit / Roof Details -->
+  <rect x="35" y="60" width="30" height="40" rx="4" ry="4" fill="#D1D5DB"/>
+  <line x1="40" y1="70" x2="60" y2="70" stroke="#9CA3AF" stroke-width="2"/>
+  <line x1="40" y1="80" x2="60" y2="80" stroke="#9CA3AF" stroke-width="2"/>
+  <line x1="40" y1="90" x2="60" y2="90" stroke="#9CA3AF" stroke-width="2"/>
+  
+  <!-- Side Windows Left -->
+  <rect x="12" y="45" width="4" height="25" fill="#1E3A8A" opacity="0.8"/>
+  <rect x="12" y="80" width="4" height="25" fill="#1E3A8A" opacity="0.8"/>
+  <rect x="12" y="115" width="4" height="25" fill="#1E3A8A" opacity="0.8"/>
+  
+  <!-- Side Windows Right -->
+  <rect x="84" y="45" width="4" height="25" fill="#1E3A8A" opacity="0.8"/>
+  <rect x="84" y="80" width="4" height="25" fill="#1E3A8A" opacity="0.8"/>
+  <rect x="84" y="115" width="4" height="25" fill="#1E3A8A" opacity="0.8"/>
+
+  <!-- Headlights -->
+  <circle cx="25" cy="12" r="3" fill="#FEF08A"/>
+  <circle cx="75" cy="12" r="3" fill="#FEF08A"/>
+
+  <!-- Taillights -->
+  <rect x="20" y="188" width="10" height="4" fill="#DC2626"/>
+  <rect x="70" y="188" width="10" height="4" fill="#DC2626"/>
+</svg>
