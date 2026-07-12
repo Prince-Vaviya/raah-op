@@ -1,8 +1,11 @@
 "use client";
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
+import { fetchAlerts, fetchAnalytics, fetchRoutes, fetchTelemetry } from "@/lib/api";
+import { useWebSocket } from "@/lib/useWebSocket";
 
 type Activity = {
-  id: number;
+  id: string | number;
+  trip_id?: string;
   title: string;
   time: string;
   type: string;
@@ -50,99 +53,117 @@ const DataContext = createContext<DataContextType | undefined>(undefined);
 
 export function DataProvider({ children }: { children: React.ReactNode }) {
   const [metrics, setMetrics] = useState<Metrics>({
-    activeBuses: 247,
-    runningRoutes: 14,
-    healthScore: 78,
-    delayedBuses: 23,
+    activeBuses: 0,
+    runningRoutes: 0,
+    healthScore: 100,
+    delayedBuses: 0,
     temperature: 29,
-    totalRidership: 311.1,
-    onTimeRate: 82.4,
-    avgDelay: 3.8,
-    fuelEfficiency: 4.2,
+    totalRidership: 0,
+    onTimeRate: 100,
+    avgDelay: 0,
+    fuelEfficiency: 0,
   });
 
-  const [activities, setActivities] = useState<Activity[]>([
-    { 
-      id: 1, 
-      title: "Bus Bunching Detected on Route 102", 
-      time: "Rt 102 · 2 min ago", 
-      type: "error",
-      description: "Traffic congestion at Silk Board Junction",
-      aiSummary: "Two buses are within 90 seconds of each other near Koramangala. Holding Bus 102B for 3 minutes will restore 8-minute headway with 91% confidence."
-    },
-    { 
-      id: 2, 
-      title: "Bus B-404 Breakdown – HSR Layout", 
-      time: "Rt 404 · 8 min ago", 
-      type: "error",
-      description: "Mechanical failure - engine overheating",
-      aiSummary: "Bus B-404 has stopped at HSR Layout. Recovery team dispatched. Estimated service gap: 25 min. Recommend deploying standby bus from Sector 12 depot."
-    },
-    { 
-      id: 3, 
-      title: "High Occupancy Warning – Route 102", 
-      time: "Rt 102 · 15 min ago", 
-      type: "warning",
-      description: "Passenger load exceeding 90% capacity",
-      aiSummary: "Morning rush crowd is unusually high due to a local event. Consider deploying an extra shuttle on this route for the next 2 hours."
-    },
-    { 
-      id: 4, 
-      title: "Route 201 Minor Delay – Road Work", 
-      time: "Rt 201 · 22 min ago", 
-      type: "warning",
-      description: "Slow traffic near Indiranagar Metro",
-      aiSummary: "Temporary lane closure causing 5-minute delays. Traffic should clear by 11:00 AM based on current flow patterns."
-    },
-  ]);
+  const [activities, setActivities] = useState<Activity[]>([]);
+  const [weeklyRidership, setWeeklyRidership] = useState<WeeklyData[]>([]);
+  const [routeHealth, setRouteHealth] = useState<RouteHealth[]>([]);
+  const [peakHourData, setPeakHourData] = useState<PeakHourData[]>([]);
+  const [delayTrend, setDelayTrend] = useState<DelayTrend[]>([]);
 
-  const [weeklyRidership, setWeeklyRidership] = useState<WeeklyData[]>([
-    { day: "Mon", val: 40 },
-    { day: "Tue", val: 55 },
-    { day: "Wed", val: 45 },
-    { day: "Thu", val: 70 },
-    { day: "Fri", val: 85 },
-    { day: "Sat", val: 95 },
-    { day: "Sun", val: 65 },
-  ]);
+  const { lastMessage } = useWebSocket();
 
-  const [peakHourData, setPeakHourData] = useState<PeakHourData[]>([
-    { time: "6am", passengers: 3000 },
-    { time: "7am", passengers: 8500 },
-    { time: "8am", passengers: 16000 },
-    { time: "9am", passengers: 11000 },
-    { time: "10am", passengers: 7000 },
-    { time: "11am", passengers: 5500 },
-    { time: "12pm", passengers: 6500 },
-    { time: "1pm", passengers: 6800 },
-    { time: "2pm", passengers: 5500 },
-    { time: "3pm", passengers: 7000 },
-    { time: "4pm", passengers: 9500 },
-    { time: "5pm", passengers: 15500 },
-    { time: "6pm", passengers: 12500 },
-    { time: "7pm", passengers: 8000 },
-    { time: "8pm", passengers: 5000 },
-  ]);
+  useEffect(() => {
+    const fetchInitialData = async () => {
+      try {
+        const telemetryData = await fetchTelemetry();
+        if (telemetryData) {
+          setMetrics(m => ({ ...m, activeBuses: telemetryData.length }));
+        }
 
-  const [delayTrend, setDelayTrend] = useState<DelayTrend[]>([
-    { time: "06:00", delay: 1 },
-    { time: "07:30", delay: 2.5 },
-    { time: "09:00", delay: 8 },
-    { time: "10:30", delay: 3 },
-    { time: "12:00", delay: 2 },
-    { time: "13:30", delay: 2.5 },
-    { time: "15:00", delay: 2 },
-    { time: "16:30", delay: 6 },
-    { time: "18:00", delay: 10 },
-  ]);
+        const alertsData = await fetchAlerts();
+        if (alertsData) {
+          const newActivities = alertsData.map((alert: any) => ({
+            id: alert.id,
+            trip_id: alert.tripId,
+            title: `Bus Bunching Alert`,
+            time: new Date(alert.createdAt).toLocaleTimeString(),
+            type: alert.predictedGapMeters < 200 ? "error" : "warning",
+            description: `Predicted gap: ${alert.predictedGapMeters}m`,
+            aiSummary: alert.confidenceNote || "AI detected bunching"
+          }));
+          setActivities(newActivities as any);
+        }
 
-  const [routeHealth, setRouteHealth] = useState<RouteHealth[]>([
-    { id: "101", name: "Central - Airport Express", score: 94, color: "bg-emerald-500" },
-    { id: "102", name: "MG Road - Electronic City", score: 61, color: "bg-amber-500" },
-    { id: "201", name: "Whitefield - Hebbal Ring", score: 89, color: "bg-emerald-500" },
-    { id: "302", name: "Indiranagar Loop", score: 97, color: "bg-emerald-500" },
-    { id: "404", name: "HSR - BTM Express", score: 34, color: "bg-red-500" },
-  ]);
+        const analyticsData = await fetchAnalytics();
+        if (analyticsData && analyticsData.length > 0) {
+          // analyticsData currently returns the /daily endpoint results in fetchAnalytics() 
+          // Wait, fetchAnalytics in api.ts might be pointing to /analytics/overview or /analytics/daily? 
+          // Let's assume fetchAnalytics returns { daily: [], overview: {} } in a bit, but for now:
+          
+          const latest = analyticsData[analyticsData.length - 1];
+          setMetrics(m => ({
+            ...m,
+            totalRidership: latest.totalRidership / 1000,
+            onTimeRate: latest.onTimeRate,
+            avgDelay: latest.avgDelayMinutes,
+            fuelEfficiency: latest.fuelEfficiencyKml
+          }));
+
+          const weekly = analyticsData.map((a: any) => {
+            const date = new Date(a.date);
+            const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            return {
+              day: days[date.getDay()],
+              val: a.totalRidership / 1000
+            };
+          });
+          setWeeklyRidership(weekly);
+        }
+
+        // We also need to fetch /api/analytics/overview to get the new fields
+        const { API_URL } = await import('@/lib/api');
+        const res = await fetch(`${API_URL}/analytics/overview`);
+        if (res.ok) {
+           const overview = await res.json();
+           setPeakHourData(overview.peakHourData || []);
+           setDelayTrend(overview.delayTrend || []);
+           setRouteHealth(overview.routeHealth || []);
+           setMetrics(m => ({ 
+             ...m, 
+             activeBuses: overview.activeBuses,
+             runningRoutes: overview.runningRoutes,
+             healthScore: overview.healthScore,
+             delayedBuses: overview.delayedBuses,
+           }));
+        }
+
+      } catch (e) {
+        console.error("Failed to fetch initial data", e);
+      }
+    };
+    fetchInitialData();
+  }, []);
+
+  // Handle WS messages
+  useEffect(() => {
+    if (!lastMessage) return;
+    if (lastMessage.type === 'ALERT') {
+      const alert = lastMessage.payload;
+      const newActivity = {
+        id: alert.id,
+        trip_id: alert.tripId,
+        title: `Bus Bunching Alert`,
+        time: new Date().toLocaleTimeString(),
+        type: alert.predictedGapMeters < 200 ? "error" : "warning",
+        description: `Predicted gap: ${alert.predictedGapMeters}m`,
+        aiSummary: alert.confidenceNote || "AI detected bunching"
+      };
+      setActivities(prev => [newActivity, ...prev].slice(0, 10));
+    } else if (lastMessage.type === 'TELEMETRY') {
+      // Could update activeBuses here if we track distinct trips, 
+      // but for simplicity we rely on the initial fetch or a periodic poll.
+    }
+  }, [lastMessage]);
 
   return (
     <DataContext.Provider

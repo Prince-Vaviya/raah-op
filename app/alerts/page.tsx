@@ -16,10 +16,32 @@ export default function Alerts() {
     }, 750);
   };
 
-  const handleAction = (alertId: number, action: 'approved' | 'rejected') => {
+  const handleAction = async (alertId: number, action: 'approved' | 'rejected') => {
     const alert = activities.find(a => a.id === alertId);
     if (!alert) return;
     
+    if (action === 'approved') {
+      try {
+        const { API_URL } = await import('../../lib/api');
+        const token = localStorage.getItem('operator_token');
+        await fetch(`${API_URL}/commands`, {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}` 
+          },
+          body: JSON.stringify({
+            trip_id: (alert as any).trip_id || '00000000-0000-0000-0000-000000000000',
+            type: 'HOLD',
+            duration_sec: 180,
+            reason: alert.aiSummary || 'Operator action',
+          })
+        });
+      } catch (err) {
+        console.error("Failed to send command", err);
+      }
+    }
+
     // Remove from main list
     setActivities(prev => prev.filter(a => a.id !== alertId));
     

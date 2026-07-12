@@ -26,6 +26,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       : `${baseClass} text-slate-600 hover:bg-slate-50 hover:text-slate-900`;
   };
 
+  useEffect(() => {
+    if (pathname !== '/login') {
+      const token = localStorage.getItem('operator_token');
+      if (!token) {
+        window.location.href = '/login';
+      }
+    }
+  }, [pathname]);
+
+  if (pathname === '/login') {
+    return <>{children}</>;
+  }
+
   return (
     <div className="flex h-screen w-full bg-[#f4f7fb] text-slate-800 font-sans overflow-hidden">
       {/* Sidebar */}

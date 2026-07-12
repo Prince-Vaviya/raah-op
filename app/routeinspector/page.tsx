@@ -3,62 +3,78 @@ import React, { useState } from "react";
 import { Search, ChevronRight, Bus } from "lucide-react";
 
 export default function RouteInspector() {
-  const [selectedRoute, setSelectedRoute] = useState<number | null>(101);
+  const [selectedRoute, setSelectedRoute] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
 
-  const routes = [
-    {
-      id: 101,
-      title: "Central - Airport Express",
-      path: "Ulve Airport",
-      status: "Operational",
-      color: "bg-blue-500",
-      statusColor: "text-emerald-700 bg-emerald-100",
-      statusDot: "bg-emerald-500",
-      buses: 8,
-      headway: 12,
-      delay: "+1.2",
-      crowding: 62,
-      score: 94,
-      scoreColor: "bg-emerald-500"
-    },
-    {
-      id: 102,
-      title: "MG Road - Flamingo City",
-      path: "Seawoods",
-      status: "Delayed",
-      color: "bg-amber-500",
-      statusColor: "text-amber-700 bg-amber-50",
-      statusDot: "bg-amber-500",
-      buses: 11,
-      headway: 8,
-      delay: "+9.4",
-      crowding: 88,
-      score: 61,
-      scoreColor: "bg-amber-500"
-    },
-    {
-      id: 210,
-      title: "HSR - BTM Express",
-      path: "Sanpada",
-      status: "Disrupted",
-      color: "bg-red-500",
-      statusColor: "text-red-700 bg-red-50",
-      statusDot: "bg-red-500",
-      buses: 4,
-      headway: 22,
-      delay: "+23.1",
-      crowding: 82,
-      score: 34,
-      scoreColor: "bg-red-500"
-    }
-  ];
+  const [routes, setRoutes] = useState<any[]>([]);
+  const [routeDetails, setRouteDetails] = useState<any>(null);
+
+  React.useEffect(() => {
+    if (!selectedRoute) return;
+    const getDetails = async () => {
+      try {
+        const { fetchRouteDetails } = await import('@/lib/api');
+        const data = await fetchRouteDetails(selectedRoute.toString());
+        setRouteDetails(data);
+      } catch (e) {
+        console.error(e);
+      }
+    };
+    getDetails();
+    const interval = setInterval(getDetails, 5000);
+    return () => clearInterval(interval);
+  }, [selectedRoute]);
+
+  React.useEffect(() => {
+    const fetchRoutesData = async () => {
+      try {
+        const { fetchRoutes } = await import('@/lib/api');
+        const routeData = await fetchRoutes();
+        
+        if (routeData) {
+          const mapped = routeData.map((r: any) => {
+            const isHealthy = r.isHealthy;
+            return {
+              id: r.routeName || r.id,
+              realId: r.id,
+              title: r.routeName || `Route`,
+              path: 'City Route',
+              status: isHealthy ? 'Operational' : 'Delayed',
+              color: isHealthy ? 'bg-blue-500' : 'bg-amber-500',
+              statusColor: isHealthy ? 'text-emerald-700 bg-emerald-100' : 'text-amber-700 bg-amber-50',
+              statusDot: isHealthy ? 'bg-emerald-500' : 'bg-amber-500',
+              buses: r.buses,
+              headway: r.headway,
+              delay: isHealthy ? `+${r.delay}` : `+${r.delay || 9.4}`,
+              crowding: r.crowding || 40,
+              score: r.score,
+              scoreColor: isHealthy ? 'bg-emerald-500' : 'bg-amber-500'
+            };
+          });
+          setRoutes(mapped);
+          if (mapped.length > 0) setSelectedRoute(mapped[0].realId);
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    };
+    fetchRoutesData();
+  }, []);
 
   const filteredRoutes = routes.filter(route => 
     route.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
     route.path.toLowerCase().includes(searchQuery.toLowerCase()) || 
     route.id.toString().includes(searchQuery)
   );
+
+  const itemsPerPage = 5;
+  const totalPages = Math.ceil(filteredRoutes.length / itemsPerPage);
+  const paginatedRoutes = filteredRoutes.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
 
   return (
     <div className="relative min-h-screen">
@@ -71,7 +87,7 @@ export default function RouteInspector() {
       <div className="flex justify-between items-start mb-8">
         <div className="flex-1">
           <h1 className="text-4xl font-black text-slate-900 tracking-tight">Routes</h1>
-          <p className="text-slate-600 mt-1 font-medium">{filteredRoutes.length} routes · 1 operational</p>
+          <p className="text-slate-600 mt-1 font-medium">{filteredRoutes.length} routes</p>
           
           <div className="relative w-full max-w-md mt-6">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
@@ -101,11 +117,11 @@ export default function RouteInspector() {
             No routes found matching "{searchQuery}"
           </div>
         ) : (
-          filteredRoutes.map((route) => (
+          paginatedRoutes.map((route) => (
             <div
-            key={route.id}
-            onClick={() => setSelectedRoute(route.id)}
-            className={`bg-white rounded-3xl p-6 shadow-sm hover:shadow-md transition-all cursor-pointer border-2 ${selectedRoute === route.id ? 'border-blue-400' : 'border-transparent'}`}
+            key={route.realId}
+            onClick={() => setSelectedRoute(route.realId)}
+            className={`bg-white rounded-3xl p-6 shadow-sm hover:shadow-md transition-all cursor-pointer border-2 ${selectedRoute === route.realId ? 'border-blue-400' : 'border-transparent'}`}
           >
             <div className="flex items-center justify-between">
               {/* Left: Icon & Title */}
@@ -166,147 +182,177 @@ export default function RouteInspector() {
         )}
       </div>
 
+      {totalPages > 1 && (
+        <div className="flex justify-center items-center gap-4 mb-12">
+          <button 
+            disabled={currentPage === 1}
+            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+            className="px-4 py-2 bg-white border border-slate-200 rounded-xl disabled:opacity-50 shadow-sm font-medium text-slate-700 cursor-pointer"
+          >
+            Previous
+          </button>
+          <span className="text-slate-600 font-medium">Page {currentPage} of {totalPages}</span>
+          <button 
+            disabled={currentPage === totalPages}
+            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+            className="px-4 py-2 bg-white border border-slate-200 rounded-xl disabled:opacity-50 shadow-sm font-medium text-slate-700 cursor-pointer"
+          >
+            Next
+          </button>
+        </div>
+      )}
+
       {/* Comparison Dashboard (Expands when route selected) */}
       {selectedRoute && (
         <div className="bg-white rounded-[2rem] shadow-lg p-8 border border-slate-100 mb-12">
           <div className="flex gap-8">
+            {(() => {
+              const route = routes.find(r => r.realId === selectedRoute) || routes[0];
+              if (!route) return null;
+              return (
+                <>
+                  {/* With Raah */}
+                  <div className="flex-1 bg-slate-50/50 rounded-3xl p-8 border border-slate-100 relative">
+                    <div className="absolute -top-4 left-8 bg-blue-100 text-blue-700 font-bold px-6 py-2 rounded-full shadow-sm">With Raah</div>
 
-            {/* With Raah */}
-            <div className="flex-1 bg-slate-50/50 rounded-3xl p-8 border border-slate-100 relative">
-              <div className="absolute -top-4 left-8 bg-blue-100 text-blue-700 font-bold px-6 py-2 rounded-full shadow-sm">With Raah</div>
-
-              {/* Timeline */}
-              <div className="mt-8 mb-4 relative px-4">
-                <div className="absolute top-1/2 left-4 right-4 h-1.5 bg-slate-200 -translate-y-1/2 rounded-full"></div>
-                <div className="flex justify-between relative z-10">
-                  {['Andheri', 'Jogeshwari', 'Goregaon', 'Malad', 'Kandivali', 'Borivali'].map((stop, i) => (
-                    <div key={stop} className="flex flex-col items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center shadow-md">
-                        <Bus size={16} />
+                    {/* Timeline */}
+                    <div className="mt-8 mb-4 relative px-4">
+                      <div className="absolute top-1/2 left-4 right-4 h-1.5 bg-slate-200 -translate-y-1/2 rounded-full"></div>
+                      <div className="flex justify-between relative z-10">
+                        {routeDetails ? routeDetails.busStops.slice(0, 6).map((stop: any, i: number) => {
+                          // Find buses that are roughly around this stop's progress
+                          const busHere = routeDetails.trips && i < routeDetails.trips.length ? routeDetails.trips[i] : null;
+                          return (
+                            <div key={stop.id} className="flex flex-col items-center gap-3 relative">
+                              <div className="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center shadow-md">
+                                <Bus size={16} />
+                              </div>
+                              <span className="text-xs font-semibold text-slate-500 whitespace-nowrap overflow-hidden text-ellipsis max-w-[80px]" title={stop.name}>{stop.name.split(' ')[0]}</span>
+                            </div>
+                          );
+                        }) : <div className="text-sm text-slate-400">Loading stops...</div>}
                       </div>
-                      <span className="text-xs font-semibold text-slate-500">{stop}</span>
                     </div>
-                  ))}
-                </div>
-              </div>
 
-              <div className="text-center mb-8 text-sm text-slate-500 font-medium italic leading-relaxed py-1">
-                Buses are evenly spaced, eliminating long waits.
-              </div>
-
-              {/* Metrics Grid */}
-              <div className="grid grid-cols-4 gap-4 mb-8">
-                <div className="bg-blue-50 p-3 rounded-2xl flex flex-col h-full">
-                  <div className="text-xs text-blue-600/70 font-semibold mb-2">Avg Wait Time</div>
-                  <div className="mt-auto">
-                    <div className="text-xl font-black text-blue-700">5 min</div>
-                    <div className="text-xs text-blue-600 mt-1 whitespace-nowrap">Stable ↗</div>
-                  </div>
-                </div>
-                <div className="bg-blue-50 p-3 rounded-2xl flex flex-col h-full">
-                  <div className="text-xs text-blue-600/70 font-semibold mb-2">Reliability</div>
-                  <div className="mt-auto">
-                    <div className="text-xl font-black text-blue-700">87%</div>
-                    <div className="text-xs text-blue-600 mt-1 whitespace-nowrap">Excellent ✓</div>
-                  </div>
-                </div>
-                <div className="bg-blue-50 p-3 rounded-2xl flex flex-col h-full">
-                  <div className="text-xs text-blue-600/70 font-semibold mb-2">Bunching Events</div>
-                  <div className="mt-auto">
-                    <div className="text-xl font-black text-blue-700">3</div>
-                    <div className="text-xs text-blue-600 mt-1 whitespace-nowrap">Controlled ✓</div>
-                  </div>
-                </div>
-                <div className="bg-blue-50 p-3 rounded-2xl flex flex-col h-full">
-                  <div className="text-xs text-blue-600/70 font-semibold mb-2">Passenger Complaints</div>
-                  <div className="mt-auto">
-                    <div className="text-xl font-black text-blue-700">Low</div>
-                    <div className="text-xs text-blue-600 mt-1 whitespace-nowrap">Minimal ✓</div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex justify-between items-center px-6 py-4 bg-white rounded-2xl border border-slate-100 shadow-sm">
-                <span className="font-bold text-slate-600">Passenger Served</span>
-                <span className="text-2xl font-black text-blue-600">4,320</span>
-              </div>
-            </div>
-
-            {/* Without Raah */}
-            <div className="flex-1 rounded-3xl p-8 border border-slate-100 relative opacity-90">
-              <div className="absolute -top-4 right-8 bg-slate-100 text-slate-600 font-bold px-6 py-2 rounded-full shadow-sm">Without Raah</div>
-
-              {/* Timeline */}
-              <div className="mt-8 mb-4 relative px-4">
-                <div className="absolute top-1/2 left-4 right-4 h-1.5 bg-slate-200 -translate-y-1/2 rounded-full"></div>
-                <div className="flex justify-between relative z-10">
-                  {['Andheri', 'Jogeshwari', 'Goregaon', 'Malad', 'Kandivali', 'Borivali'].map((stop, i) => (
-                    <div key={stop} className="flex flex-col items-center gap-3 relative">
-                      <div className="w-4 h-4 rounded-full bg-slate-400 shadow-sm mt-2"></div>
-
-                      {/* Simulate Bunching */}
-                      {i === 1 && (
-                        <div className="absolute -top-8 flex gap-1">
-                          <div className="w-7 h-7 rounded-full bg-red-500 text-white flex items-center justify-center shadow-md"><Bus size={14} /></div>
-                          <div className="w-7 h-7 rounded-full bg-red-500 text-white flex items-center justify-center shadow-md"><Bus size={14} /></div>
-                          <div className="w-7 h-7 rounded-full bg-red-500 text-white flex items-center justify-center shadow-md"><Bus size={14} /></div>
-                        </div>
-                      )}
-                      {i === 3 && (
-                        <div className="absolute -top-8 flex gap-1">
-                          <div className="w-7 h-7 rounded-full bg-red-500 text-white flex items-center justify-center shadow-md"><Bus size={14} /></div>
-                          <div className="w-7 h-7 rounded-full bg-red-500 text-white flex items-center justify-center shadow-md"><Bus size={14} /></div>
-                        </div>
-                      )}
-
-                      <span className="text-xs font-semibold text-slate-500 mt-3">{stop}</span>
+                    <div className="text-center mb-8 text-sm text-slate-500 font-medium italic leading-relaxed py-1">
+                      Buses are evenly spaced, eliminating long waits.
                     </div>
-                  ))}
-                </div>
-              </div>
 
-              <div className="text-center mb-8 text-sm text-slate-500 font-medium italic leading-relaxed py-1">
-                Buses bunch together, causing severe delays.
-              </div>
+                    {/* Metrics Grid */}
+                    <div className="grid grid-cols-4 gap-4 mb-8">
+                      <div className="bg-blue-50 p-3 rounded-2xl flex flex-col h-full">
+                        <div className="text-xs text-blue-600/70 font-semibold mb-2">Avg Wait Time</div>
+                        <div className="mt-auto">
+                          <div className="text-xl font-black text-blue-700">{route.headway} min</div>
+                          <div className="text-xs text-blue-600 mt-1 whitespace-nowrap">Stable ↗</div>
+                        </div>
+                      </div>
+                      <div className="bg-blue-50 p-3 rounded-2xl flex flex-col h-full">
+                        <div className="text-xs text-blue-600/70 font-semibold mb-2">Reliability</div>
+                        <div className="mt-auto">
+                          <div className="text-xl font-black text-blue-700">{route.score}%</div>
+                          <div className="text-xs text-blue-600 mt-1 whitespace-nowrap">{route.score >= 80 ? 'Excellent ✓' : 'Good ✓'}</div>
+                        </div>
+                      </div>
+                      <div className="bg-blue-50 p-3 rounded-2xl flex flex-col h-full">
+                        <div className="text-xs text-blue-600/70 font-semibold mb-2">Bunching Events</div>
+                        <div className="mt-auto">
+                          <div className="text-xl font-black text-blue-700">{Math.floor(route.delay / 5)}</div>
+                          <div className="text-xs text-blue-600 mt-1 whitespace-nowrap">Controlled ✓</div>
+                        </div>
+                      </div>
+                      <div className="bg-blue-50 p-3 rounded-2xl flex flex-col h-full">
+                        <div className="text-xs text-blue-600/70 font-semibold mb-2">Passenger Complaints</div>
+                        <div className="mt-auto">
+                          <div className="text-xl font-black text-blue-700">Low</div>
+                          <div className="text-xs text-blue-600 mt-1 whitespace-nowrap">Minimal ✓</div>
+                        </div>
+                      </div>
+                    </div>
 
-              {/* Metrics Grid */}
-              <div className="grid grid-cols-4 gap-4 mb-8">
-                <div className="bg-red-50 p-3 rounded-2xl border border-red-100 flex flex-col h-full">
-                  <div className="text-xs text-red-600/70 font-semibold mb-2">Avg Wait Time</div>
-                  <div className="mt-auto">
-                    <div className="text-xl font-black text-red-700">15 min</div>
-                    <div className="text-xs text-red-600 mt-1 whitespace-nowrap">↑ Increasing</div>
+                    <div className="flex justify-between items-center px-6 py-4 bg-white rounded-2xl border border-slate-100 shadow-sm">
+                      <span className="font-bold text-slate-600">Passenger Served</span>
+                      <span className="text-2xl font-black text-blue-600">{route.buses * 42}</span>
+                    </div>
                   </div>
-                </div>
-                <div className="bg-red-50 p-3 rounded-2xl border border-red-100 flex flex-col h-full">
-                  <div className="text-xs text-red-600/70 font-semibold mb-2">Reliability</div>
-                  <div className="mt-auto">
-                    <div className="text-xl font-black text-red-700">53%</div>
-                    <div className="text-xs text-red-600 mt-1 whitespace-nowrap">↓ Declining</div>
-                  </div>
-                </div>
-                <div className="bg-red-50 p-3 rounded-2xl border border-red-100 flex flex-col h-full">
-                  <div className="text-xs text-red-600/70 font-semibold mb-2">Bunching Events</div>
-                  <div className="mt-auto">
-                    <div className="text-xl font-black text-red-700">17</div>
-                    <div className="text-xs text-red-600 mt-1 whitespace-nowrap">▲ Critical</div>
-                  </div>
-                </div>
-                <div className="bg-red-50 p-3 rounded-2xl border border-red-100 flex flex-col h-full">
-                  <div className="text-xs text-red-600/70 font-semibold mb-2">Passenger Complaints</div>
-                  <div className="mt-auto">
-                    <div className="text-xl font-black text-red-700">High</div>
-                    <div className="text-xs text-red-600 mt-1 whitespace-nowrap">Severe</div>
-                  </div>
-                </div>
-              </div>
 
-              <div className="flex justify-between items-center px-6 py-4 bg-red-50 rounded-2xl border border-red-100 shadow-sm">
-                <span className="font-bold text-red-800/60">Passenger Served</span>
-                <span className="text-2xl font-black text-red-600">1,252</span>
-              </div>
-            </div>
+                  {/* Without Raah */}
+                  <div className="flex-1 rounded-3xl p-8 border border-slate-100 relative opacity-90">
+                    <div className="absolute -top-4 right-8 bg-slate-100 text-slate-600 font-bold px-6 py-2 rounded-full shadow-sm">Without Raah</div>
 
+                    {/* Timeline */}
+                    <div className="mt-8 mb-4 relative px-4">
+                      <div className="absolute top-1/2 left-4 right-4 h-1.5 bg-slate-200 -translate-y-1/2 rounded-full"></div>
+                      <div className="flex justify-between relative z-10">
+                        {routeDetails ? routeDetails.busStops.slice(0, 6).map((stop: any, i: number) => (
+                          <div key={stop.id} className="flex flex-col items-center gap-3 relative">
+                            <div className="w-4 h-4 rounded-full bg-slate-400 shadow-sm mt-2"></div>
+
+                            {/* Simulate Bunching */}
+                            {i === 1 && (
+                              <div className="absolute -top-8 flex gap-1">
+                                <div className="w-7 h-7 rounded-full bg-red-500 text-white flex items-center justify-center shadow-md"><Bus size={14} /></div>
+                                <div className="w-7 h-7 rounded-full bg-red-500 text-white flex items-center justify-center shadow-md"><Bus size={14} /></div>
+                                <div className="w-7 h-7 rounded-full bg-red-500 text-white flex items-center justify-center shadow-md"><Bus size={14} /></div>
+                              </div>
+                            )}
+                            {i === 3 && (
+                              <div className="absolute -top-8 flex gap-1">
+                                <div className="w-7 h-7 rounded-full bg-red-500 text-white flex items-center justify-center shadow-md"><Bus size={14} /></div>
+                                <div className="w-7 h-7 rounded-full bg-red-500 text-white flex items-center justify-center shadow-md"><Bus size={14} /></div>
+                              </div>
+                            )}
+
+                            <span className="text-xs font-semibold text-slate-500 mt-3 whitespace-nowrap overflow-hidden text-ellipsis max-w-[80px]" title={stop.name}>{stop.name.split(' ')[0]}</span>
+                          </div>
+                        )) : <div className="text-sm text-slate-400">Loading stops...</div>}
+                      </div>
+                    </div>
+
+                    <div className="text-center mb-8 text-sm text-slate-500 font-medium italic leading-relaxed py-1">
+                      Buses bunch together, causing severe delays.
+                    </div>
+
+                    {/* Metrics Grid */}
+                    <div className="grid grid-cols-4 gap-4 mb-8">
+                      <div className="bg-red-50 p-3 rounded-2xl border border-red-100 flex flex-col h-full">
+                        <div className="text-xs text-red-600/70 font-semibold mb-2">Avg Wait Time</div>
+                        <div className="mt-auto">
+                          <div className="text-xl font-black text-red-700">{Math.floor(route.headway * 2.5)} min</div>
+                          <div className="text-xs text-red-600 mt-1 whitespace-nowrap">↑ Increasing</div>
+                        </div>
+                      </div>
+                      <div className="bg-red-50 p-3 rounded-2xl border border-red-100 flex flex-col h-full">
+                        <div className="text-xs text-red-600/70 font-semibold mb-2">Reliability</div>
+                        <div className="mt-auto">
+                          <div className="text-xl font-black text-red-700">{Math.max(10, route.score - 34)}%</div>
+                          <div className="text-xs text-red-600 mt-1 whitespace-nowrap">↓ Declining</div>
+                        </div>
+                      </div>
+                      <div className="bg-red-50 p-3 rounded-2xl border border-red-100 flex flex-col h-full">
+                        <div className="text-xs text-red-600/70 font-semibold mb-2">Bunching Events</div>
+                        <div className="mt-auto">
+                          <div className="text-xl font-black text-red-700">{Math.floor(route.delay / 5) + 12}</div>
+                          <div className="text-xs text-red-600 mt-1 whitespace-nowrap">▲ Critical</div>
+                        </div>
+                      </div>
+                      <div className="bg-red-50 p-3 rounded-2xl border border-red-100 flex flex-col h-full">
+                        <div className="text-xs text-red-600/70 font-semibold mb-2">Passenger Complaints</div>
+                        <div className="mt-auto">
+                          <div className="text-xl font-black text-red-700">High</div>
+                          <div className="text-xs text-red-600 mt-1 whitespace-nowrap">Severe</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex justify-between items-center px-6 py-4 bg-red-50 rounded-2xl border border-red-100 shadow-sm">
+                      <span className="font-bold text-red-800/60">Passenger Served</span>
+                      <span className="text-2xl font-black text-red-600">{Math.floor(route.buses * 42 * 0.4)}</span>
+                    </div>
+                  </div>
+                </>
+              );
+            })()}
           </div>
 
           {/* Bottom Global Status Bars */}

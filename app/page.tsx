@@ -1,11 +1,46 @@
 "use client";
+import { useState, useEffect } from "react";
 import { useData } from "../providers/DataProvider";
 import Link from "next/link";
 import { Route, Lightbulb, ArrowRight, AlertTriangle, AlertCircle, PlayCircle, Zap } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip } from 'recharts';
-
+import Map, { Source, Layer, Marker } from "react-map-gl/maplibre";
+import maplibregl from "maplibre-gl";
+import "maplibre-gl/dist/maplibre-gl.css";
+import { Train, Building2 } from "lucide-react";
 export default function MissionControl() {
   const { metrics, activities, weeklyRidership } = useData();
+  const [routesData, setRoutesData] = useState<any>({ type: "FeatureCollection", features: [] });
+  const [buses, setBuses] = useState<any[]>([]);
+
+  useEffect(() => {
+    import('../lib/api').then(({ fetchRoutesGeoJSON, fetchLiveTelemetryGeoJSON }) => {
+      fetchRoutesGeoJSON().then((data) => {
+        if (data) setRoutesData(data);
+      }).catch(console.error);
+      
+      fetchLiveTelemetryGeoJSON().then((data) => {
+        if (data && data.features) setBuses(data.features.map((f: any) => ({
+          trip_id: f.properties.trip_id,
+          lat: f.geometry.coordinates[1],
+          lng: f.geometry.coordinates[0],
+          forward_headway: f.properties.forward_headway
+        })));
+      }).catch(console.error);
+      
+      const interval = setInterval(() => {
+        fetchLiveTelemetryGeoJSON().then((data) => {
+          if (data && data.features) setBuses(data.features.map((f: any) => ({
+            trip_id: f.properties.trip_id,
+            lat: f.geometry.coordinates[1],
+            lng: f.geometry.coordinates[0],
+            forward_headway: f.properties.forward_headway
+          })));
+        }).catch(console.error);
+      }, 3000);
+      return () => clearInterval(interval);
+    });
+  }, []);
 
   return (
     <>
@@ -38,7 +73,31 @@ export default function MissionControl() {
         <div className="col-span-2 space-y-6">
           {/* Map Preview */}
           <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm relative h-96 group">
-            <img src="/map_preview.png" alt="Map Preview" className="w-full h-full object-cover" />
+            <Map
+              initialViewState={{ longitude: 72.8777, latitude: 19.0760, zoom: 10 }}
+              mapStyle="https://basemaps.cartocdn.com/gl/positron-gl-style/style.json"
+              mapLib={maplibregl}
+              style={{ width: "100%", height: "100%" }}
+              interactive={false}
+            >
+              <Source id="routes" type="geojson" data={routesData}>
+                <Layer 
+                  id="route-line" 
+                  type="line" 
+                  paint={{ 'line-color': ['get', 'color'], 'line-width': 3, 'line-opacity': 0.6 }} 
+                />
+              </Source>
+              {buses.map((bus) => {
+                const isDelayed = bus.forward_headway < 200;
+                return (
+                  <Marker key={bus.trip_id} longitude={bus.lng || 72.8777} latitude={bus.lat || 19.0760} anchor="center">
+                    <div className={`w-8 h-8 rounded-xl shadow-lg flex items-center justify-center ${isDelayed ? 'bg-red-500 text-white' : 'bg-blue-500 text-white'}`}>
+                      <Train size={16} />
+                    </div>
+                  </Marker>
+                );
+              })}
+            </Map>
             <div className="absolute top-4 left-4 bg-white/90 backdrop-blur px-4 py-2 rounded-lg font-semibold text-slate-800 shadow-sm border border-slate-100">
               Live Map Preview
             </div>
@@ -128,15 +187,17 @@ export default function MissionControl() {
             </div>
 
             {/* AI Insight */}
-            <div className="m-4 bg-gradient-to-br from-indigo-50 to-blue-50 rounded-xl p-4 border border-indigo-100/50 shrink-0">
-              <div className="flex items-center gap-2 mb-2">
-                <Lightbulb size={16} className="text-indigo-600" />
-                <span className="text-xs font-bold tracking-wider uppercase text-indigo-600">AI Insight</span>
+            {activities.length > 0 && activities[0].aiSummary && (
+              <div className="m-4 bg-gradient-to-br from-indigo-50 to-blue-50 rounded-xl p-4 border border-indigo-100/50 shrink-0">
+                <div className="flex items-center gap-2 mb-2">
+                  <Lightbulb size={16} className="text-indigo-600" />
+                  <span className="text-xs font-bold tracking-wider uppercase text-indigo-600">AI Insight</span>
+                </div>
+                <p className="text-sm text-slate-700 leading-relaxed">
+                  {activities[0].aiSummary}
+                </p>
               </div>
-              <p className="text-sm text-slate-700 leading-relaxed">
-                Route 102 is experiencing bus bunching near Silk Board. Recommend holding Bus 102B for 3 minutes.
-              </p>
-            </div>
+            )}
           </div>
 
           {/* Mascot Decor */}
