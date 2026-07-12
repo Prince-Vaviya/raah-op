@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import Map, { Source, Layer, Marker } from "react-map-gl/maplibre";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
-import { Filter, Layers, Crosshair, AlignJustify, AlertTriangle, Train, Building2, MessageSquare, X, Send } from "lucide-react";
+import { Filter, Layers, Crosshair, AlignJustify, AlertTriangle, Train, Building2, MessageSquare, X, Send, Ghost } from "lucide-react";
 import { fetchRoutesGeoJSON, fetchLiveTelemetryGeoJSON, fetchAllStopsGeoJSON, API_URL } from "../../lib/api";
 
 const initialRoutesData = {
@@ -152,7 +152,7 @@ export default function LiveMap() {
     if (!selectedTripId) return;
     try {
       const token = localStorage.getItem('token') || '';
-      await fetch(`${API_URL}/commands`, {
+      const res = await fetch(`${API_URL}/commands`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -165,9 +165,14 @@ export default function LiveMap() {
           reason: "Operator initiated from Live Map"
         })
       });
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || `HTTP ${res.status}`);
+      }
       alert(`Command ${type} sent to conductor!`);
-    } catch (e) {
+    } catch (e: any) {
       console.error("Failed to send command", e);
+      alert(`Failed to send command: ${e.message}`);
     }
   };
 
@@ -299,9 +304,9 @@ export default function LiveMap() {
         {stopVolumes.filter((s: any) => s.passengersWaiting > 15).map((stop: any) => (
           <Marker key={`hm-${stop.id}`} longitude={stop.lng} latitude={stop.lat}>
             <div className="flex flex-col items-center">
-              <div className="bg-red-500 text-white px-2 py-0.5 rounded-full text-[10px] font-bold shadow-lg animate-bounce cursor-pointer hover:bg-red-600 transition-colors"
+              <div className="bg-red-500 text-white px-2 py-1 rounded-full text-[10px] font-bold shadow-lg animate-bounce cursor-pointer hover:bg-red-600 transition-colors flex items-center gap-1"
                    onClick={(e) => { e.stopPropagation(); alert(`Ghost Bus Dispatched to ${stop.name}!`); }}>
-                {stop.passengersWaiting} waiting! Dispatch Ghost Bus 👻
+                {stop.passengersWaiting} waiting! Dispatch Ghost Bus <Ghost size={12} />
               </div>
             </div>
           </Marker>

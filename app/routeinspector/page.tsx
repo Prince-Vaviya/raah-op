@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import React, { useState } from "react";
-import { Search, ChevronRight, Bus } from "lucide-react";
+import { Search, ChevronRight, Bus, TrendingUp } from "lucide-react";
 
 export default function RouteInspector() {
   const [selectedRoute, setSelectedRoute] = useState<string | null>(null);
@@ -153,7 +153,7 @@ export default function RouteInspector() {
                         <div className="text-xs text-blue-600/70 font-semibold mb-2">Avg Wait Time</div>
                         <div className="mt-auto">
                           <div className="text-xl font-black text-blue-700">{route.headway} min</div>
-                          <div className="text-xs text-blue-600 mt-1 whitespace-nowrap">Stable ↗</div>
+                          <div className="text-xs text-blue-600 mt-1 whitespace-nowrap flex items-center">Stable <TrendingUp size={12} className="ml-1" /></div>
                         </div>
                       </div>
                       <div className="bg-blue-50 p-3 rounded-2xl flex flex-col h-full">
