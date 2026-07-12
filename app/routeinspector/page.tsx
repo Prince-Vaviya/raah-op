@@ -110,98 +110,6 @@ export default function RouteInspector() {
         </div>
       </div>
 
-      {/* Routes List */}
-      <div className="space-y-4 mb-12">
-        {filteredRoutes.length === 0 ? (
-          <div className="text-center py-12 text-slate-500 bg-white rounded-3xl border border-slate-100 shadow-sm">
-            No routes found matching "{searchQuery}"
-          </div>
-        ) : (
-          paginatedRoutes.map((route) => (
-            <div
-            key={route.realId}
-            onClick={() => setSelectedRoute(route.realId)}
-            className={`bg-white rounded-3xl p-6 shadow-sm hover:shadow-md transition-all cursor-pointer border-2 ${selectedRoute === route.realId ? 'border-blue-400' : 'border-transparent'}`}
-          >
-            <div className="flex items-center justify-between">
-              {/* Left: Icon & Title */}
-              <div className="flex items-center gap-6 w-1/3">
-                <div className={`w-14 h-14 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-inner ${route.color}`} style={{ borderBottomRightRadius: 4 }}>
-                  {route.id}
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-slate-900">{route.title}</h3>
-                  <p className="text-slate-500 text-sm mt-0.5">{route.path}</p>
-                </div>
-              </div>
-
-              {/* Status */}
-              <div className="w-1/6">
-                <span className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-semibold ${route.statusColor}`}>
-                  <span className={`w-2 h-2 rounded-full ${route.statusDot}`}></span>
-                  {route.status}
-                </span>
-              </div>
-
-              {/* Metrics */}
-              <div className="flex items-center gap-8 w-1/3 justify-between">
-                <div className="text-center">
-                  <div className="font-bold text-slate-900 text-lg">{route.buses}</div>
-                  <div className="text-xs text-slate-500">Buses</div>
-                </div>
-                <div className="text-center">
-                  <div className="font-bold text-slate-900 text-lg">{route.headway}<span className="text-sm">m</span></div>
-                  <div className="text-xs text-slate-500">Headway</div>
-                </div>
-                <div className="text-center">
-                  <div className="font-bold text-slate-900 text-lg">{route.delay}<span className="text-sm">m</span></div>
-                  <div className="text-xs text-slate-500">Avg Delay</div>
-                </div>
-                <div className="text-center">
-                  <div className="font-bold text-slate-900 text-lg">{route.crowding}%</div>
-                  <div className="text-xs text-slate-500">Crowding</div>
-                </div>
-              </div>
-
-              {/* Score */}
-              <div className="flex items-center gap-4 w-1/6 justify-end">
-                <div className="flex flex-col items-end gap-1 w-full max-w-[120px]">
-                  <span className="text-xs text-slate-400 font-medium">Health Score</span>
-                  <div className="flex items-center gap-3 w-full">
-                    <div className="h-2 flex-1 bg-slate-100 rounded-full overflow-hidden">
-                      <div className={`h-full ${route.scoreColor}`} style={{ width: `${route.score}%` }}></div>
-                    </div>
-                    <span className={`font-bold ${route.statusColor.split(' ')[0]}`}>{route.score}</span>
-                  </div>
-                </div>
-                <ChevronRight className="text-slate-300" />
-              </div>
-            </div>
-          </div>
-          ))
-        )}
-      </div>
-
-      {totalPages > 1 && (
-        <div className="flex justify-center items-center gap-4 mb-12">
-          <button 
-            disabled={currentPage === 1}
-            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-            className="px-4 py-2 bg-white border border-slate-200 rounded-xl disabled:opacity-50 shadow-sm font-medium text-slate-700 cursor-pointer"
-          >
-            Previous
-          </button>
-          <span className="text-slate-600 font-medium">Page {currentPage} of {totalPages}</span>
-          <button 
-            disabled={currentPage === totalPages}
-            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-            className="px-4 py-2 bg-white border border-slate-200 rounded-xl disabled:opacity-50 shadow-sm font-medium text-slate-700 cursor-pointer"
-          >
-            Next
-          </button>
-        </div>
-      )}
-
       {/* Comparison Dashboard (Expands when route selected) */}
       {selectedRoute && (
         <div className="bg-white rounded-[2rem] shadow-lg p-8 border border-slate-100 mb-12">
@@ -390,6 +298,99 @@ export default function RouteInspector() {
         </div>
       )}
 
-    </div>
+
+      {/* Routes List */}
+      <div className="space-y-4 mb-12">
+        {filteredRoutes.length === 0 ? (
+          <div className="text-center py-12 text-slate-500 bg-white rounded-3xl border border-slate-100 shadow-sm">
+            No routes found matching "{searchQuery}"
+          </div>
+        ) : (
+          paginatedRoutes.map((route) => (
+            <div
+            key={route.realId}
+            onClick={() => setSelectedRoute(route.realId)}
+            className={`bg-white rounded-3xl p-6 shadow-sm hover:shadow-md transition-all cursor-pointer border-2 ${selectedRoute === route.realId ? 'border-blue-400' : 'border-transparent'}`}
+          >
+            <div className="flex items-center justify-between">
+              {/* Left: Icon & Title */}
+              <div className="flex items-center gap-6 w-1/3">
+                <div className={`w-14 h-14 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-inner ${route.color}`} style={{ borderBottomRightRadius: 4 }}>
+                  {route.id}
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-slate-900">{route.title}</h3>
+                  <p className="text-slate-500 text-sm mt-0.5">{route.path}</p>
+                </div>
+              </div>
+
+              {/* Status */}
+              <div className="w-1/6">
+                <span className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-semibold ${route.statusColor}`}>
+                  <span className={`w-2 h-2 rounded-full ${route.statusDot}`}></span>
+                  {route.status}
+                </span>
+              </div>
+
+              {/* Metrics */}
+              <div className="flex items-center gap-8 w-1/3 justify-between">
+                <div className="text-center">
+                  <div className="font-bold text-slate-900 text-lg">{route.buses}</div>
+                  <div className="text-xs text-slate-500">Buses</div>
+                </div>
+                <div className="text-center">
+                  <div className="font-bold text-slate-900 text-lg">{route.headway}<span className="text-sm">m</span></div>
+                  <div className="text-xs text-slate-500">Headway</div>
+                </div>
+                <div className="text-center">
+                  <div className="font-bold text-slate-900 text-lg">{route.delay}<span className="text-sm">m</span></div>
+                  <div className="text-xs text-slate-500">Avg Delay</div>
+                </div>
+                <div className="text-center">
+                  <div className="font-bold text-slate-900 text-lg">{route.crowding}%</div>
+                  <div className="text-xs text-slate-500">Crowding</div>
+                </div>
+              </div>
+
+              {/* Score */}
+              <div className="flex items-center gap-4 w-1/6 justify-end">
+                <div className="flex flex-col items-end gap-1 w-full max-w-[120px]">
+                  <span className="text-xs text-slate-400 font-medium">Health Score</span>
+                  <div className="flex items-center gap-3 w-full">
+                    <div className="h-2 flex-1 bg-slate-100 rounded-full overflow-hidden">
+                      <div className={`h-full ${route.scoreColor}`} style={{ width: `${route.score}%` }}></div>
+                    </div>
+                    <span className={`font-bold ${route.statusColor.split(' ')[0]}`}>{route.score}</span>
+                  </div>
+                </div>
+                <ChevronRight className="text-slate-300" />
+              </div>
+            </div>
+          </div>
+          ))
+        )}
+      </div>
+
+      {totalPages > 1 && (
+        <div className="flex justify-center items-center gap-4 mb-12">
+          <button 
+            disabled={currentPage === 1}
+            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+            className="px-4 py-2 bg-white border border-slate-200 rounded-xl disabled:opacity-50 shadow-sm font-medium text-slate-700 cursor-pointer"
+          >
+            Previous
+          </button>
+          <span className="text-slate-600 font-medium">Page {currentPage} of {totalPages}</span>
+          <button 
+            disabled={currentPage === totalPages}
+            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+            className="px-4 py-2 bg-white border border-slate-200 rounded-xl disabled:opacity-50 shadow-sm font-medium text-slate-700 cursor-pointer"
+          >
+            Next
+          </button>
+        </div>
+      )}
+
+          </div>
   );
 }
