@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Map as MapIcon, Route, Lightbulb, Bell, Search, CloudRain, Clock, Sidebar } from "lucide-react";
+import { LayoutDashboard, Map as MapIcon, Route, Lightbulb, Bell, Search, CloudRain, Clock, Sidebar, Wrench } from "lucide-react";
 import { useData } from "@/providers/DataProvider";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -93,6 +93,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <Link href="/insights" className={getLinkClass("/insights")}>
               <Lightbulb size={20} className="shrink-0" />
               {!isSidebarCollapsed && <span>Insights</span>}
+            </Link>
+            <Link href="/maintenance" className={getLinkClass("/maintenance")}>
+              <Wrench size={20} className="shrink-0" />
+              {!isSidebarCollapsed && <span>Depot & Maintenance</span>}
             </Link>
             <Link href="/alerts" className={getLinkClass("/alerts") + " " + (isSidebarCollapsed ? 'justify-center' : 'justify-between')}>
               <div className={`flex items-center ${isSidebarCollapsed ? 'justify-center' : 'gap-3'}`}>
