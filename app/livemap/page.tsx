@@ -4,7 +4,7 @@ import Map, { Source, Layer, Marker } from "react-map-gl/maplibre";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { Filter, Layers, Crosshair, AlignJustify, AlertTriangle, Train, Building2, MessageSquare, X, Send } from "lucide-react";
-import { fetchRoutesGeoJSON, fetchLiveTelemetryGeoJSON, API_URL } from "../../lib/api";
+import { fetchRoutesGeoJSON, fetchLiveTelemetryGeoJSON, fetchAllStopsGeoJSON, API_URL } from "../../lib/api";
 
 const initialRoutesData = {
   type: "FeatureCollection",
@@ -20,26 +20,36 @@ export default function LiveMap() {
   });
 
   const [routesData, setRoutesData] = useState<any>(initialRoutesData);
+  const [stopsData, setStopsData] = useState<any>(null);
   const [stations, setStations] = useState<any[]>([]);
   const [buses, setBuses] = useState<any[]>([]);
   const [selectedTripId, setSelectedTripId] = useState<string | null>(null);
+  const [selectedTripDetails, setSelectedTripDetails] = useState<any>(null);
+  const [incidents, setIncidents] = useState<any[]>([]);
+  const [stopVolumes, setStopVolumes] = useState<any[]>([]);
   const [chatMessages, setChatMessages] = useState<any[]>([]);
+  const [activePanelTab, setActivePanelTab] = useState<'DETAILS' | 'CHAT'>('DETAILS');
   const [newMessage, setNewMessage] = useState("");
 
 
   useEffect(() => {
     const fetchMapData = async () => {
       try {
-        const data = await fetchRoutesGeoJSON();
-        if (data) setRoutesData(data);
+        const [routes, stops] = await Promise.all([
+          fetchRoutesGeoJSON(),
+          fetchAllStopsGeoJSON()
+        ]);
+        if (routes) setRoutesData(routes);
+        if (stops) setStopsData(stops);
       } catch (e) {
         console.error("Failed to fetch map data", e);
       }
     };
     fetchMapData();
 
-    const fetchBuses = async () => {
+    const fetchLiveMapData = async () => {
       try {
+        const token = localStorage.getItem('token') || '';
         const data = await fetchLiveTelemetryGeoJSON();
         if (data && data.features) {
           setBuses(data.features.map((f: any) => ({
@@ -49,23 +59,36 @@ export default function LiveMap() {
             forward_headway: f.properties.headway
           })));
         }
+
+        const incidentsRes = await fetch(`${API_URL}/incidents`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (incidentsRes.ok) {
+          const incData = await incidentsRes.json();
+          setIncidents(incData);
+        }
+
+        const heatmapRes = await fetch(`${API_URL}/routes/stops/heatmap`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (heatmapRes.ok) {
+          const hmData = await heatmapRes.json();
+          setStopVolumes(hmData);
+        }
       } catch (e) {
-        console.error("Failed to fetch buses", e);
+        console.error("Failed to fetch buses/incidents/heatmap", e);
       }
     };
-    fetchBuses();
+    fetchLiveMapData();
 
-    const interval = setInterval(() => {
-      fetchBuses();
-    }, 3000);
-
+    const interval = setInterval(fetchLiveMapData, 3000);
     return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
     if (!selectedTripId) return;
 
-    const fetchMessages = async () => {
+    const fetchTripSpecificData = async () => {
       try {
         const token = localStorage.getItem('token') || '';
         const res = await fetch(`${API_URL}/chat/${selectedTripId}`, {
@@ -75,14 +98,24 @@ export default function LiveMap() {
           const data = await res.json();
           setChatMessages(data);
         }
+        
+        const detailsRes = await fetch(`${API_URL}/trips/${selectedTripId}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (detailsRes.ok) {
+          const detailsData = await detailsRes.json();
+          setSelectedTripDetails(detailsData);
+        }
       } catch (e) {
-        console.error("Failed to fetch messages", e);
+        console.error("Failed to fetch trip data", e);
       }
     };
-    fetchMessages();
+    fetchTripSpecificData();
 
-    const interval = setInterval(fetchMessages, 5000);
-    return () => clearInterval(interval);
+    const tripInterval = setInterval(fetchTripSpecificData, 5000);
+    return () => {
+      clearInterval(tripInterval);
+    };
   }, [selectedTripId]);
 
   const sendMessage = async () => {
@@ -107,6 +140,29 @@ export default function LiveMap() {
       // Will be picked up by the next poll
     } catch (e) {
       console.error("Failed to send message", e);
+    }
+  };
+
+  const sendCommand = async (type: 'HOLD' | 'REROUTE') => {
+    if (!selectedTripId) return;
+    try {
+      const token = localStorage.getItem('token') || '';
+      await fetch(`${API_URL}/commands`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          trip_id: selectedTripId,
+          type: type,
+          duration_sec: 300, // default 5 mins
+          reason: "Operator initiated from Live Map"
+        })
+      });
+      alert(`Command ${type} sent to conductor!`);
+    } catch (e) {
+      console.error("Failed to send command", e);
     }
   };
 
@@ -136,6 +192,21 @@ export default function LiveMap() {
           </Source>
         )}
 
+        {activeFilters.stops && stopsData && stopsData.features && stopsData.features.map((feature: any) => (
+          <Marker 
+            key={`stop-${feature.properties.id}`} 
+            longitude={feature.geometry.coordinates[0]} 
+            latitude={feature.geometry.coordinates[1]}
+          >
+            <div className="flex flex-col items-center group">
+              <div className="text-[10px] font-bold text-slate-700 bg-white/90 px-1.5 py-0.5 rounded shadow-sm whitespace-nowrap mb-1 opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all z-10 relative">
+                {feature.properties.name}
+              </div>
+              <div className="w-3 h-3 bg-white border-2 border-blue-500 rounded-full shadow-sm z-0 relative"></div>
+            </div>
+          </Marker>
+        ))}
+
         {buses.map((bus) => {
           const lng = bus.lng || 72.8777;
           const lat = bus.lat || 19.0760;
@@ -162,6 +233,32 @@ export default function LiveMap() {
             </Marker>
           );
         })}
+
+        {/* Incidents Layer */}
+        {incidents.map((incident: any) => (
+          <Marker key={incident.id} longitude={incident.lng} latitude={incident.lat}>
+            <div className="flex flex-col items-center">
+              <div className="bg-white px-2 py-0.5 rounded shadow text-[10px] font-bold text-red-600 border border-red-200 mb-1">
+                {incident.type}
+              </div>
+              <div className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center shadow-lg border-2 border-white animate-pulse">
+                <AlertTriangle size={14} color="white" />
+              </div>
+            </div>
+          </Marker>
+        ))}
+
+        {/* Heatmap Layer */}
+        {stopVolumes.filter((s: any) => s.passengersWaiting > 15).map((stop: any) => (
+          <Marker key={`hm-${stop.id}`} longitude={stop.lng} latitude={stop.lat}>
+            <div className="flex flex-col items-center">
+              <div className="bg-red-500 text-white px-2 py-0.5 rounded-full text-[10px] font-bold shadow-lg animate-bounce cursor-pointer hover:bg-red-600 transition-colors"
+                   onClick={(e) => { e.stopPropagation(); alert(`Ghost Bus Dispatched to ${stop.name}!`); }}>
+                {stop.passengersWaiting} waiting! Dispatch Ghost Bus 👻
+              </div>
+            </div>
+          </Marker>
+        ))}
       </Map>
 
       <div className="absolute top-8 left-8 bg-white/95 backdrop-blur-md rounded-full shadow-lg flex items-center p-2 gap-2 border border-slate-100">
@@ -197,52 +294,126 @@ export default function LiveMap() {
       </div>
 
       {selectedTripId && (
-        <div className="absolute top-4 right-4 w-80 bg-white rounded-2xl shadow-2xl border border-slate-200 flex flex-col h-[500px] overflow-hidden z-50">
+        <div className="absolute top-4 right-4 w-96 bg-white rounded-2xl shadow-2xl border border-slate-200 flex flex-col h-[600px] overflow-hidden z-50">
           <div className="bg-blue-600 p-4 text-white flex justify-between items-center shrink-0">
             <div>
-              <h3 className="font-bold">Contact Conductor</h3>
-              <p className="text-blue-100 text-xs">Trip: {selectedTripId.slice(0, 8)}</p>
+              <h3 className="font-bold text-lg">Trip Details & Actions</h3>
+              <p className="text-blue-100 text-xs mt-1">Bus {selectedTripDetails?.busNumber || selectedTripId.slice(0, 8)} • Route {selectedTripDetails?.route?.routeName}</p>
             </div>
             <button onClick={() => setSelectedTripId(null)} className="p-1 hover:bg-blue-700 rounded-full transition-colors cursor-pointer">
               <X size={20} />
             </button>
           </div>
           
-          <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-50">
-            {chatMessages.length === 0 && (
-              <p className="text-center text-slate-400 text-sm mt-10">No messages yet.</p>
-            )}
-            {chatMessages.map(msg => {
-              const isMine = msg.senderRole === 'OPERATOR';
-              return (
-                <div key={msg.id} className={`flex flex-col ${isMine ? 'items-end' : 'items-start'}`}>
-                  <div className={`px-4 py-2 rounded-2xl max-w-[85%] ${isMine ? 'bg-blue-500 text-white rounded-tr-none' : 'bg-white border border-slate-200 text-slate-800 rounded-tl-none'}`}>
-                    <p className="text-sm">{msg.message}</p>
-                  </div>
-                  <span className="text-[10px] text-slate-400 mt-1 mx-1">
-                    {new Date(msg.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                  </span>
-                </div>
-              );
-            })}
+          <div className="flex border-b border-slate-200">
+            <button 
+              className={`flex-1 py-3 text-sm font-semibold transition-colors ${activePanelTab === 'DETAILS' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-slate-500 hover:bg-slate-50'}`}
+              onClick={() => setActivePanelTab('DETAILS')}
+            >
+              Trip Status
+            </button>
+            <button 
+              className={`flex-1 py-3 text-sm font-semibold transition-colors ${activePanelTab === 'CHAT' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-slate-500 hover:bg-slate-50'}`}
+              onClick={() => setActivePanelTab('CHAT')}
+            >
+              Chat
+            </button>
           </div>
 
-          <div className="p-3 bg-white border-t border-slate-100 flex items-center gap-2 shrink-0">
-            <input 
-              type="text" 
-              placeholder="Message conductor..." 
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
-              className="flex-1 bg-slate-100 border-transparent rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-            />
-            <button 
-              onClick={sendMessage}
-              disabled={!newMessage.trim()}
-              className="w-9 h-9 rounded-full bg-blue-500 text-white flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-600 transition-colors"
-            >
-              <Send size={16} />
-            </button>
+          <div className="flex-1 overflow-y-auto bg-slate-50 relative">
+            {activePanelTab === 'DETAILS' ? (
+              <div className="p-5 space-y-6">
+                
+                {/* Problem Context */}
+                <div className="space-y-3">
+                  <h4 className="text-xs font-bold text-slate-400 tracking-wider uppercase">Problem Context</h4>
+                  
+                  <div className="bg-white p-4 rounded-xl border border-red-100 shadow-sm relative overflow-hidden">
+                    <div className="absolute top-0 left-0 w-1 h-full bg-red-500"></div>
+                    <div className="flex items-start gap-3">
+                      <div className="mt-0.5 text-red-500"><AlertTriangle size={18} /></div>
+                      <div>
+                        <p className="text-sm font-semibold text-slate-800">Reason for Bunching</p>
+                        <p className="text-sm text-slate-600 mt-1">{selectedTripDetails?.bunchingReason || "No specific reason reported by system."}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden">
+                    <div className="absolute top-0 left-0 w-1 h-full bg-slate-400"></div>
+                    <div className="flex items-start gap-3">
+                      <div className="mt-0.5 text-slate-400"><AlignJustify size={18} /></div>
+                      <div>
+                        <p className="text-sm font-semibold text-slate-800">Conductor's Notes</p>
+                        <p className="text-sm text-slate-600 mt-1 italic">"{selectedTripDetails?.conductorNotes || "No notes provided by conductor."}"</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Dispatch Actions */}
+                <div className="space-y-3 pt-4 border-t border-slate-200">
+                  <h4 className="text-xs font-bold text-slate-400 tracking-wider uppercase">Dispatch Actions</h4>
+                  
+                  <div className="grid grid-cols-2 gap-3">
+                    <button 
+                      onClick={() => sendCommand('HOLD')}
+                      className="bg-amber-100 hover:bg-amber-200 text-amber-800 py-3 px-4 rounded-xl font-bold text-sm shadow-sm transition-colors border border-amber-200 flex flex-col items-center gap-1 cursor-pointer"
+                    >
+                      <span>Hold Bus</span>
+                      <span className="text-[10px] font-normal opacity-80">Instruct to wait</span>
+                    </button>
+                    
+                    <button 
+                      onClick={() => sendCommand('REROUTE')}
+                      className="bg-purple-100 hover:bg-purple-200 text-purple-800 py-3 px-4 rounded-xl font-bold text-sm shadow-sm transition-colors border border-purple-200 flex flex-col items-center gap-1 cursor-pointer"
+                    >
+                      <span>Re-route</span>
+                      <span className="text-[10px] font-normal opacity-80">Send alternate path</span>
+                    </button>
+                  </div>
+                </div>
+
+              </div>
+            ) : (
+              <div className="h-full flex flex-col">
+                <div className="flex-1 p-4 space-y-3 overflow-y-auto">
+                  {chatMessages.length === 0 && (
+                    <p className="text-center text-slate-400 text-sm mt-10">No messages yet.</p>
+                  )}
+                  {chatMessages.map(msg => {
+                    const isMine = msg.senderRole === 'OPERATOR';
+                    return (
+                      <div key={msg.id} className={`flex flex-col ${isMine ? 'items-end' : 'items-start'}`}>
+                        <div className={`px-4 py-2 rounded-2xl max-w-[85%] ${isMine ? 'bg-blue-500 text-white rounded-tr-none' : 'bg-white border border-slate-200 text-slate-800 rounded-tl-none'}`}>
+                          <p className="text-sm">{msg.message}</p>
+                        </div>
+                        <span className="text-[10px] text-slate-400 mt-1 mx-1">
+                          {new Date(msg.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="p-3 bg-white border-t border-slate-100 flex items-center gap-2 shrink-0">
+                  <input 
+                    type="text" 
+                    placeholder="Message conductor..." 
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
+                    className="flex-1 bg-slate-100 border-transparent rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                  />
+                  <button 
+                    onClick={sendMessage}
+                    disabled={!newMessage.trim()}
+                    className="w-9 h-9 rounded-full bg-blue-500 text-white flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-600 transition-colors"
+                  >
+                    <Send size={16} />
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

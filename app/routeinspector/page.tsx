@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import React, { useState } from "react";
 import { Search, ChevronRight, Bus } from "lucide-react";
 
@@ -363,7 +364,14 @@ export default function RouteInspector() {
                     <span className={`font-bold ${route.statusColor.split(' ')[0]}`}>{route.score}</span>
                   </div>
                 </div>
-                <ChevronRight className="text-slate-300" />
+                
+                <div className="flex flex-col gap-2 items-center">
+                  <ChevronRight className="text-slate-300" />
+                  <Link href={`/routeinspector/${route.realId}`} className="text-xs bg-blue-100 text-blue-700 px-3 py-1 rounded-full hover:bg-blue-200 transition-colors shadow-sm font-bold" onClick={(e) => e.stopPropagation()}>
+                    View Map
+                  </Link>
+                </div>
+
               </div>
             </div>
           </div>

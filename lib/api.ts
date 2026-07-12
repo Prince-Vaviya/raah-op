@@ -42,3 +42,9 @@ export async function fetchLiveTelemetryGeoJSON() {
   if (!res.ok) throw new Error('Failed to fetch telemetry geojson');
   return res.json();
 }
+
+export async function fetchAllStopsGeoJSON() {
+  const res = await fetch(`${API_URL}/routes/stops/geojson`);
+  if (!res.ok) throw new Error('Failed to fetch stops geojson');
+  return res.json();
+}
