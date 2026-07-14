@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Map as MapIcon, Route, Lightbulb, Bell, Search, CloudRain, Clock, Sidebar, Wrench } from "lucide-react";
+import { LayoutDashboard, Map as MapIcon, Route, Lightbulb, Bell, Search, CloudRain, Clock, Sidebar, Wrench, Users } from "lucide-react";
 import { useData } from "@/providers/DataProvider";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -105,6 +105,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               </div>
               {!isSidebarCollapsed && (alertsData?.length || 0) > 0 && <span className="bg-blue-600 text-white text-xs px-2 py-0.5 rounded-full shrink-0">{alertsData.length}</span>}
               {isSidebarCollapsed && (alertsData?.length || 0) > 0 && <span className="absolute top-2 right-2 w-2 h-2 bg-blue-600 rounded-full"></span>}
+            </Link>
+            <Link href="/conductors" className={getLinkClass("/conductors")}>
+              <Users size={20} className="shrink-0" />
+              {!isSidebarCollapsed && <span>Conductors</span>}
             </Link>
           </nav>
         </div>

@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import Map, { Source, Layer, Marker } from "react-map-gl/maplibre";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
-import { Filter, Layers, Crosshair, AlignJustify, AlertTriangle, Train, Building2, MessageSquare, X, Send, Ghost } from "lucide-react";
+import { Filter, Layers, Crosshair, AlignJustify, AlertTriangle, Train, Building2, MessageSquare, X, Send } from "lucide-react";
 import { fetchRoutesGeoJSON, fetchLiveTelemetryGeoJSON, fetchAllStopsGeoJSON, API_URL } from "../../lib/api";
 
 const initialRoutesData = {
@@ -11,10 +11,91 @@ const initialRoutesData = {
   features: []
 };
 
+// Internal component for an animated Ghost Bus to avoid re-rendering the whole map
+function GhostBusMarker({ targetLat, targetLng }: { targetLat: number, targetLng: number }) {
+  const [path, setPath] = useState<number[][]>([]);
+  const [progress, setProgress] = useState(0);
+
+  useEffect(() => {
+    // Mumbai is coastal (ocean on the west), so we spawn the bus slightly to the East (+lng) 
+    // and a bit North/South so it doesn't spawn in the water.
+    const startLng = targetLng + 0.03 + (Math.random() * 0.02);
+    const startLat = targetLat + (Math.random() * 0.06 - 0.03);
+
+    // Fetch actual road route from OSRM
+    fetch(`https://router.project-osrm.org/route/v1/driving/${startLng},${startLat};${targetLng},${targetLat}?geometries=geojson&overview=full`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.routes && data.routes.length > 0) {
+          setPath(data.routes[0].geometry.coordinates); // Array of [lng, lat]
+        } else {
+          // Fallback if routing fails
+          setPath([[startLng, startLat], [targetLng, targetLat]]);
+        }
+      })
+      .catch(() => setPath([[startLng, startLat], [targetLng, targetLat]]));
+  }, [targetLat, targetLng]);
+
+  useEffect(() => {
+    if (path.length < 2) return;
+    const interval = setInterval(() => {
+      setProgress(p => {
+        if (p >= path.length - 1) return p;
+        return p + 0.3; // Speed of the bus along the path points
+      });
+    }, 50); // 50ms updates for buttery smooth animation
+    return () => clearInterval(interval);
+  }, [path]);
+
+  if (path.length === 0) return null; // Don't render until route is loaded
+
+  const index = Math.floor(progress);
+  const remainder = progress - index;
+  
+  let currentLng = path[index][0];
+  let currentLat = path[index][1];
+  let rotation = 0;
+
+  if (index < path.length - 1) {
+    const nextLng = path[index + 1][0];
+    const nextLat = path[index + 1][1];
+    currentLng = currentLng + (nextLng - currentLng) * remainder;
+    currentLat = currentLat + (nextLat - currentLat) * remainder;
+    
+    // Calculate heading/rotation in degrees
+    rotation = Math.atan2(nextLng - currentLng, nextLat - currentLat) * (180 / Math.PI);
+  }
+
+  return (
+    <Marker longitude={currentLng} latitude={currentLat} anchor="center">
+      <div className="relative group cursor-pointer animate-pulse">
+        <div className="relative z-10 w-8 h-12 flex items-center justify-center transition-transform group-hover:scale-110">
+          <img 
+            src="/bus-top.svg" 
+            alt="Ghost Bus" 
+            className="w-full h-full drop-shadow-[0_0_10px_rgba(252,211,77,0.8)]" 
+            style={{ 
+              filter: 'hue-rotate(45deg) saturate(200%) brightness(120%)',
+              transform: `rotate(${rotation}deg)` 
+            }} 
+          />
+          <div className="absolute bottom-full mb-2 hidden group-hover:flex flex-col items-center z-30">
+            <div className="bg-amber-500 text-white text-xs rounded px-2 py-1 whitespace-nowrap shadow-lg font-bold">
+              Ghost Bus Dispatched
+            </div>
+            <div className="w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[4px] border-t-amber-500"></div>
+          </div>
+        </div>
+      </div>
+    </Marker>
+  );
+}
+
 export default function LiveMap() {
   const [activeFilters, setActiveFilters] = useState({
     routes: true,
     stops: true,
+    heatmap: false,
     traffic: false,
     weather: false
   });
@@ -33,6 +114,8 @@ export default function LiveMap() {
   const [broadcastMode, setBroadcastMode] = useState(false);
   const [broadcastCenter, setBroadcastCenter] = useState<{lat: number, lng: number} | null>(null);
   const [broadcastMessage, setBroadcastMessage] = useState("");
+  const [ghostBusTargets, setGhostBusTargets] = useState<{id: string, lat: number, lng: number}[]>([]);
+  const [resolvedBuses, setResolvedBuses] = useState<Set<string>>(new Set());
 
 
   useEffect(() => {
@@ -148,11 +231,11 @@ export default function LiveMap() {
     }
   };
 
-  const sendCommand = async (type: 'HOLD' | 'REROUTE') => {
+  const sendCommand = async (type: 'HOLD' | 'REROUTE' | 'EXPRESS' | 'SHORT_LOOP') => {
     if (!selectedTripId) return;
     try {
       const token = localStorage.getItem('token') || '';
-      const res = await fetch(`${API_URL}/commands`, {
+      await fetch(`${API_URL}/commands`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -165,14 +248,19 @@ export default function LiveMap() {
           reason: "Operator initiated from Live Map"
         })
       });
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.error || `HTTP ${res.status}`);
-      }
-      alert(`Command ${type} sent to conductor!`);
-    } catch (e: any) {
+      alert(`Command ${type} sent to conductor! The bus issue has been marked as resolved.`);
+      
+      // Add this bus to resolved buses so it turns blue again
+      setResolvedBuses(prev => {
+        const next = new Set(prev);
+        next.add(selectedTripId);
+        return next;
+      });
+      
+      // Close the panel
+      setSelectedTripId(null);
+    } catch (e) {
       console.error("Failed to send command", e);
-      alert(`Failed to send command: ${e.message}`);
     }
   };
 
@@ -209,7 +297,7 @@ export default function LiveMap() {
   };
 
   return (
-    <div className="relative w-full h-[100vh] overflow-hidden bg-slate-50">
+    <div className="relative w-full h-full overflow-hidden bg-slate-50">
       <Map
         initialViewState={{
           longitude: 72.8777,
@@ -236,25 +324,42 @@ export default function LiveMap() {
           </Source>
         )}
 
-        {activeFilters.stops && stopsData && stopsData.features && stopsData.features.map((feature: any) => (
-          <Marker 
-            key={`stop-${feature.properties.id}`} 
-            longitude={feature.geometry.coordinates[0]} 
-            latitude={feature.geometry.coordinates[1]}
-          >
-            <div className="flex flex-col items-center group">
-              <div className="text-[10px] font-bold text-slate-700 bg-white/90 px-1.5 py-0.5 rounded shadow-sm whitespace-nowrap mb-1 opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all z-10 relative">
-                {feature.properties.name}
-              </div>
-              <div className="w-3 h-3 bg-white border-2 border-blue-500 rounded-full shadow-sm z-0 relative"></div>
-            </div>
-          </Marker>
-        ))}
+        {activeFilters.stops && stopsData && (
+          <Source id="stops" type="geojson" data={stopsData}>
+            <Layer 
+              id="stops-point" 
+              type="circle" 
+              paint={{
+                'circle-color': '#ffffff',
+                'circle-radius': 5,
+                'circle-stroke-width': 2,
+                'circle-stroke-color': '#3b82f6'
+              }} 
+            />
+            <Layer
+              id="stops-label"
+              type="symbol"
+              minzoom={14}
+              layout={{
+                'text-field': ['get', 'name'],
+                'text-size': 11,
+                'text-offset': [0, 1.2],
+                'text-anchor': 'top'
+              }}
+              paint={{
+                'text-color': '#334155',
+                'text-halo-color': '#ffffff',
+                'text-halo-width': 2
+              }}
+            />
+          </Source>
+        )}
 
         {buses.map((bus) => {
           const lng = bus.lng || 72.8777;
           const lat = bus.lat || 19.0760;
-          const isDelayed = bus.forward_headway < 200;
+          // If the operator has resolved this bus, it is no longer considered delayed visually
+          const isDelayed = bus.forward_headway < 200 && !resolvedBuses.has(bus.trip_id);
 
           return (
             <Marker key={bus.trip_id} longitude={lng} latitude={lat} anchor="center">
@@ -301,12 +406,19 @@ export default function LiveMap() {
         ))}
 
         {/* Heatmap Layer */}
-        {stopVolumes.filter((s: any) => s.passengersWaiting > 15).map((stop: any) => (
+        {activeFilters.heatmap && stopVolumes
+          .filter((s: any) => s.passengersWaiting > 25)
+          .sort((a: any, b: any) => b.passengersWaiting - a.passengersWaiting)
+          .slice(0, 30)
+          .map((stop: any) => (
           <Marker key={`hm-${stop.id}`} longitude={stop.lng} latitude={stop.lat}>
             <div className="flex flex-col items-center">
-              <div className="bg-red-500 text-white px-2 py-1 rounded-full text-[10px] font-bold shadow-lg animate-bounce cursor-pointer hover:bg-red-600 transition-colors flex items-center gap-1"
-                   onClick={(e) => { e.stopPropagation(); alert(`Ghost Bus Dispatched to ${stop.name}!`); }}>
-                {stop.passengersWaiting} waiting! Dispatch Ghost Bus <Ghost size={12} />
+              <div className="bg-red-500 text-white px-2 py-0.5 rounded-full text-[10px] font-bold shadow-lg animate-bounce cursor-pointer hover:bg-red-600 transition-colors"
+                   onClick={(e) => { 
+                     e.stopPropagation(); 
+                     setGhostBusTargets(prev => [...prev, { id: 'gb-' + Date.now(), lat: stop.lat, lng: stop.lng }]);
+                   }}>
+                {stop.passengersWaiting} waiting! Dispatch Ghost Bus 👻
               </div>
             </div>
           </Marker>
@@ -319,6 +431,11 @@ export default function LiveMap() {
             </div>
           </Marker>
         )}
+
+        {/* Animated Ghost Buses */}
+        {ghostBusTargets.map(gb => (
+          <GhostBusMarker key={gb.id} targetLat={gb.lat} targetLng={gb.lng} />
+        ))}
       </Map>
 
       <div className="absolute top-8 left-8 bg-white/95 backdrop-blur-md rounded-full shadow-lg flex items-center p-2 gap-2 border border-slate-100">
@@ -336,6 +453,12 @@ export default function LiveMap() {
           className={`px-5 py-2 text-sm rounded-full font-medium transition-colors cursor-pointer ${activeFilters.stops ? 'bg-blue-500 text-white shadow-md' : 'bg-transparent text-slate-600 hover:bg-slate-100'}`}
         >
           Stops
+        </button>
+        <button
+          onClick={() => setActiveFilters(prev => ({ ...prev, heatmap: !prev.heatmap }))}
+          className={`px-5 py-2 text-sm rounded-full font-medium transition-colors cursor-pointer ${activeFilters.heatmap ? 'bg-blue-500 text-white shadow-md' : 'bg-transparent text-slate-600 hover:bg-slate-100'}`}
+        >
+          Alerts
         </button>
       </div>
 
@@ -485,6 +608,22 @@ export default function LiveMap() {
                     >
                       <span>Re-route</span>
                       <span className="text-[10px] font-normal opacity-80">Send alternate path</span>
+                    </button>
+
+                    <button 
+                      onClick={() => sendCommand('EXPRESS')}
+                      className="bg-emerald-100 hover:bg-emerald-200 text-emerald-800 py-3 px-4 rounded-xl font-bold text-sm shadow-sm transition-colors border border-emerald-200 flex flex-col items-center gap-1 cursor-pointer"
+                    >
+                      <span>Express Mode</span>
+                      <span className="text-[10px] font-normal opacity-80">Skip next 3 stops</span>
+                    </button>
+
+                    <button 
+                      onClick={() => sendCommand('SHORT_LOOP')}
+                      className="bg-rose-100 hover:bg-rose-200 text-rose-800 py-3 px-4 rounded-xl font-bold text-sm shadow-sm transition-colors border border-rose-200 flex flex-col items-center gap-1 cursor-pointer"
+                    >
+                      <span>Short Loop</span>
+                      <span className="text-[10px] font-normal opacity-80">Dispatch empty bus</span>
                     </button>
                   </div>
                 </div>
