@@ -2,14 +2,13 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Map as MapIcon, Route, Lightbulb, Bell, Search, CloudRain, Clock, Sidebar, Wrench, Users } from "lucide-react";
+import { LayoutDashboard, Map as MapIcon, Route, Lightbulb, Bell, CloudRain, Clock, Wrench, Users } from "lucide-react";
 import { useData } from "@/providers/DataProvider";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { activities } = useData();
   const pathname = usePathname();
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 60000);
@@ -20,11 +19,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     temperature: 29
   });
 
-  const getLinkClass = (path: string) => {
+  const getNavItemClass = (path: string) => {
     const isActive = pathname === path;
-    const baseClass = `flex items-center ${isSidebarCollapsed ? 'justify-center' : 'gap-3'} px-3 py-2 rounded-lg font-medium transition-all group relative`;
+    const baseClass = "flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-semibold transition-all whitespace-nowrap";
     return isActive
-      ? `${baseClass} bg-blue-50 text-blue-700`
+      ? `${baseClass} bg-blue-50 text-blue-600 shadow-sm`
       : `${baseClass} text-slate-600 hover:bg-slate-50 hover:text-slate-900`;
   };
 
@@ -42,123 +41,77 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }
 
   return (
-    <div className="flex h-screen w-full bg-[#f4f7fb] text-slate-800 font-sans overflow-hidden">
-      {/* Sidebar */}
-      <aside className={`${isSidebarCollapsed ? 'w-20' : 'w-64'} bg-white border-r border-slate-200 flex flex-col justify-between shrink-0 transition-all duration-300 overflow-visible z-20`}>
-        <div>
-          <div className="flex items-center justify-between p-5 min-h-[5rem]">
-            {isSidebarCollapsed ? (
-              <div 
-                className="w-full flex justify-center relative group cursor-pointer"
-                onClick={() => setIsSidebarCollapsed(false)}
-              >
-                <img src="/raah_logo.svg" alt="RAAH Logo" className="w-10 h-10 shrink-0 object-contain transition-all duration-300" />
-                
-                {/* Tooltip */}
-                <div className="absolute left-full ml-4 top-1/2 -translate-y-1/2 px-3 py-2 bg-[#2d2f31] text-white text-sm font-medium rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-50 shadow-md flex items-center gap-3 transition-opacity">
-                  <div className="w-5 h-5 rounded border-2 border-white/40 flex items-center justify-center text-[10px]">{'|>'}</div>
-                  Open sidebar
-                </div>
-              </div>
-            ) : (
-              <div className="flex items-center justify-between w-full">
-                <Link href="/" className="flex items-center gap-3 group">
-                  <img src="/raah_logo.svg" alt="RAAH Logo" className="w-10 h-10 shrink-0 object-contain" />
-                  <h1 className="text-2xl font-black tracking-tight text-slate-900 group-hover:text-blue-600 transition-colors">RAAH</h1>
-                </Link>
-                <button 
-                  onClick={() => setIsSidebarCollapsed(true)}
-                  className="p-2 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
-                  title="Collapse sidebar"
-                >
-                  <Sidebar size={20} />
-                </button>
-              </div>
-            )}
+    <div className="flex flex-col h-screen w-full bg-[#f4f7fb] text-slate-800 font-sans overflow-hidden">
+      {/* Floating Navbar */}
+      <div className="w-full px-6 pt-5 shrink-0 z-30">
+        <header className="h-20 bg-white/95 backdrop-blur-md border border-slate-200/80 rounded-2xl flex items-center justify-between px-7 shadow-md shadow-slate-200/40">
+          {/* Left: Brand Logo */}
+          <div className="flex items-center gap-3.5 shrink-0">
+            <Link href="/" className="flex items-center gap-3 group">
+              <img src="/raah_logo.svg" alt="RAAH Logo" className="w-9 h-9 shrink-0 object-contain" />
+              <span className="text-xl font-black tracking-tight text-slate-900 group-hover:text-blue-600 transition-colors">
+                RAAH
+              </span>
+            </Link>
           </div>
 
-          <nav className="px-4 space-y-2 mt-2">
-            <Link href="/" className={getLinkClass("/")}>
-              <LayoutDashboard size={20} className="shrink-0" />
-              {!isSidebarCollapsed && <span>Mission Control</span>}
+          {/* Center: Navigation Links */}
+          <nav className="flex items-center gap-2 overflow-x-auto mx-auto px-4 no-scrollbar">
+            <Link href="/" className={getNavItemClass("/")}>
+              <LayoutDashboard size={19} />
+              <span>Mission Control</span>
             </Link>
-            <Link href="/livemap" className={getLinkClass("/livemap")}>
-              <MapIcon size={20} className="shrink-0" />
-              {!isSidebarCollapsed && <span>Live Map</span>}
+            <Link href="/livemap" className={getNavItemClass("/livemap")}>
+              <MapIcon size={19} />
+              <span>Live Map</span>
             </Link>
-            <Link href="/routeinspector" className={getLinkClass("/routeinspector")}>
-              <Route size={20} className="shrink-0" />
-              {!isSidebarCollapsed && <span>Route Inspector</span>}
+            <Link href="/routeinspector" className={getNavItemClass("/routeinspector")}>
+              <Route size={19} />
+              <span>Route Inspector</span>
             </Link>
-            <Link href="/insights" className={getLinkClass("/insights")}>
-              <Lightbulb size={20} className="shrink-0" />
-              {!isSidebarCollapsed && <span>Insights</span>}
+            <Link href="/insights" className={getNavItemClass("/insights")}>
+              <Lightbulb size={19} />
+              <span>Insights</span>
             </Link>
-            <Link href="/maintenance" className={getLinkClass("/maintenance")}>
-              <Wrench size={20} className="shrink-0" />
-              {!isSidebarCollapsed && <span>Depot & Maintenance</span>}
+            <Link href="/maintenance" className={getNavItemClass("/maintenance")}>
+              <Wrench size={19} />
+              <span>Depot & Maintenance</span>
             </Link>
-            <Link href="/alerts" className={getLinkClass("/alerts") + " " + (isSidebarCollapsed ? 'justify-center' : 'justify-between')}>
-              <div className={`flex items-center ${isSidebarCollapsed ? 'justify-center' : 'gap-3'}`}>
-                <Bell size={20} className="shrink-0" />
-                {!isSidebarCollapsed && <span>Alerts</span>}
-              </div>
-              {!isSidebarCollapsed && (activities?.length || 0) > 0 && <span className="bg-red-600 text-white text-xs px-2 py-0.5 rounded-full shrink-0">{activities.length}</span>}
-              {isSidebarCollapsed && (activities?.length || 0) > 0 && <span className="absolute top-2 right-2 w-2 h-2 bg-red-600 rounded-full"></span>}
+            <Link href="/alerts" className={getNavItemClass("/alerts")}>
+              <Bell size={19} />
+              <span>Alerts</span>
+              {(activities?.length || 0) > 0 && (
+                <span className="ml-1 bg-red-500 text-white text-xs px-2.5 py-0.5 rounded-full font-bold">
+                  {activities.length}
+                </span>
+              )}
             </Link>
-            <Link href="/conductors" className={getLinkClass("/conductors")}>
-              <Users size={20} className="shrink-0" />
-              {!isSidebarCollapsed && <span>Conductors</span>}
+            <Link href="/conductors" className={getNavItemClass("/conductors")}>
+              <Users size={19} />
+              <span>Conductors</span>
             </Link>
           </nav>
-        </div>
-      </aside>
 
-      {/* Main Content */}
-      <main className="flex-1 flex flex-col h-full overflow-hidden">
-        {/* Header */}
-        <header className="h-20 bg-white border-b border-slate-200 flex items-center justify-between px-8 shrink-0">
-          <div className="flex items-center gap-6 flex-1 mr-8">
-            <h2 className="text-2xl font-bold text-slate-900 whitespace-nowrap capitalize">
-              {pathname === '/' ? 'Mission Control' : pathname.replace('/', '').replace(/([A-Z])/g, ' $1').trim()}
-            </h2>
-          </div>
-
-          <div className="flex items-center gap-8">
-            <div className="flex items-center gap-2">
-              <CloudRain className="text-slate-400" size={18} />
-              <div className="text-sm">
-                <span className="font-semibold text-slate-700">{metrics.temperature}°C</span>
-                <span className="text-slate-500 ml-1">Partly cloudy</span>
+          {/* Right: Operator Profile */}
+          <div className="flex items-center gap-3.5 shrink-0">
+            <div className="relative">
+              <div className="w-9 h-9 bg-slate-100 rounded-full flex items-center justify-center overflow-hidden border border-slate-200 shadow-xs">
+                <img src="/avatar_operator.svg" alt="Profile" className="w-full h-full object-cover" />
               </div>
+              <span className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full"></span>
             </div>
-
-            <div className="flex items-center gap-2">
-              <Clock className="text-slate-400" size={18} />
-              <div className="text-sm text-right">
-                <div className="font-semibold text-slate-700">{currentTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }).toLowerCase()}</div>
-                <div className="text-xs text-slate-500">{currentTime.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-4 pl-4 border-l border-slate-200">
-              <div className="relative">
-                <div className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center overflow-hidden">
-                  <img src="/avatar_operator.svg" alt="Profile" className="w-full h-full object-cover" />
-                </div>
-                <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 border-2 border-white rounded-full"></span>
-              </div>
-              <div>
-                <div className="font-semibold text-sm text-slate-900">Arjun Singh</div>
-                <div className="text-xs text-slate-500">Operator</div>
-              </div>
+            <div className="hidden md:block">
+              <div className="font-bold text-xs text-slate-900 leading-tight">Arjun Singh</div>
+              <div className="text-[10px] font-medium text-slate-500">Operator</div>
             </div>
           </div>
         </header>
+      </div>
 
-        {/* Dashboard Content */}
-        <div className={`flex-1 relative ${pathname === '/livemap' ? 'overflow-hidden' : 'p-8 overflow-y-auto'}`}>
-          <div className={pathname === '/livemap' ? 'w-full h-full' : 'max-w-7xl mx-auto space-y-6'}>
+      {/* Main Content Body */}
+      <main className="flex-1 flex flex-col h-full overflow-hidden">
+        <div className={`flex-1 relative ${pathname === '/livemap' ? 'overflow-hidden p-4' : 'p-6 md:p-8 overflow-y-auto'}`}>
+          <div className={pathname === '/livemap' ? 'w-full h-full rounded-2xl overflow-hidden shadow-xs' : 'max-w-7xl mx-auto space-y-6'}>
             {children}
           </div>
         </div>
