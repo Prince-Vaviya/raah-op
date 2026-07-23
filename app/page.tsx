@@ -53,8 +53,6 @@ export default function MissionControl() {
           { label: "Delayed Buses", value: metrics.delayedBuses, color: "bg-orange-50 text-orange-600" }
         ].map((stat, i) => (
           <div key={i} className="relative bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden min-h-[117px] flex items-center">
-            <img src="/light-grey.svg" alt="" className="absolute right-0 top-0 h-full w-auto object-cover pointer-events-none z-0" />
-            <img src="/dark-grey.svg" alt="" className="absolute right-0 top-0 h-full w-auto object-cover pointer-events-none z-0" />
 
             <div className="relative z-10 px-6 py-4 flex flex-col">
               <span className="text-4xl font-bold text-[#183247] tracking-tight">{stat.value}</span>
@@ -198,12 +196,6 @@ export default function MissionControl() {
                 </p>
               </div>
             )}
-          </div>
-
-          {/* Mascot Decor */}
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 flex items-center justify-center h-48 relative overflow-hidden">
-            <img src="/mascot_bird_standing Background Removed.svg" alt="Mascot" className="h-32 object-contain" />
-            <div className="absolute inset-0 bg-gradient-to-t from-white/80 to-transparent pointer-events-none"></div>
           </div>
 
         </div>

@@ -112,20 +112,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </Link>
           </nav>
         </div>
-
-        <div className="p-4 mt-auto">
-          <div className={`bg-blue-50 rounded-xl ${isSidebarCollapsed ? 'p-2' : 'p-4'} text-center transition-all overflow-hidden`}>
-            <div className={`${isSidebarCollapsed ? 'w-10 h-10' : 'w-16 h-16'} mx-auto ${!isSidebarCollapsed ? 'mb-2' : ''} flex items-center justify-center transition-all shrink-0`}>
-              <img src="/mascot_bird_megaphone Background Removed.svg" alt="Mascot" className="w-full h-full object-contain" />
-            </div>
-            {!isSidebarCollapsed && (
-              <div className="whitespace-nowrap transition-opacity duration-300">
-                <p className="text-sm font-semibold text-blue-700">Hello Operator!</p>
-                <p className="text-xs text-slate-600 mt-1 text-wrap">Let's make Mumbai move smarter today!</p>
-              </div>
-            )}
-          </div>
-        </div>
       </aside>
 
       {/* Main Content */}

@@ -101,14 +101,6 @@ export default function RouteInspector() {
             />
           </div>
         </div>
-
-        <div className="flex items-center gap-6">
-          <img
-            src="/mascot-bird-route-inspector.png"
-            alt="Mascot"
-            className="w-48 h-auto object-contain -mt-8"
-          />
-        </div>
       </div>
 
       {/* Comparison Dashboard (Expands when route selected) */}

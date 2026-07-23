@@ -197,7 +197,6 @@ export default function RouteDetail() {
               <h2 className="text-2xl font-black text-slate-800">Ai Copilot</h2>
               <p className="text-sm text-slate-500 font-medium">Always watching out for you</p>
             </div>
-            <img src="/mascot-bird-route-inspector.png" alt="Mascot" className="w-24 h-auto -mt-4 -mr-2 object-contain" />
           </div>
 
           <div className="mb-8">

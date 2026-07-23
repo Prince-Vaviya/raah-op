@@ -39,9 +39,6 @@ export default function Insights() {
         <div className="absolute top-0 right-0 w-1/2 h-full bg-white/40 rounded-l-full blur-3xl transform translate-x-1/4 -translate-y-1/4"></div>
 
         <div className="relative z-10 flex items-center gap-6">
-          <div className="w-32 h-32 shrink-0">
-            <img src="/mascot-insights.png" alt="Mascot" className="w-full h-full object-contain drop-shadow-xl" />
-          </div>
           <div>
             <h1 className="text-3xl font-bold text-slate-800 mb-1">Insights</h1>
             <p className="text-slate-500">June-July 2026 · Network performance overview</p>
