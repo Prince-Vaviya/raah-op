@@ -118,10 +118,7 @@ export default function Alerts() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Alert Center</h1>
-          <p className="text-sm text-slate-500 mt-1">
-            {criticalCount} critical · {warningCount} warnings · {resolvedCount} resolved today
-          </p>
+          <h1 className="text-2xl font-bold text-slate-900"></h1>
         </div>
         <button
           onClick={handleRefresh}

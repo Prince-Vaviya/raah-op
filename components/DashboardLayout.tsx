@@ -59,7 +59,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <nav className="flex items-center gap-2 overflow-x-auto mx-auto px-4 no-scrollbar">
             <Link href="/" className={getNavItemClass("/")}>
               <LayoutDashboard size={19} />
-              <span>Mission Control</span>
+              <span>Overview</span>
             </Link>
             <Link href="/livemap" className={getNavItemClass("/livemap")}>
               <MapIcon size={19} />
@@ -69,13 +69,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <Route size={19} />
               <span>Route Inspector</span>
             </Link>
-            <Link href="/insights" className={getNavItemClass("/insights")}>
-              <Lightbulb size={19} />
-              <span>Insights</span>
-            </Link>
             <Link href="/maintenance" className={getNavItemClass("/maintenance")}>
               <Wrench size={19} />
-              <span>Depot & Maintenance</span>
+              <span>Maintenance</span>
             </Link>
             <Link href="/alerts" className={getNavItemClass("/alerts")}>
               <Bell size={19} />
