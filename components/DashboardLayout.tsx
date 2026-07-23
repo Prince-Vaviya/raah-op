@@ -6,7 +6,7 @@ import { LayoutDashboard, Map as MapIcon, Route, Lightbulb, Bell, Search, CloudR
 import { useData } from "@/providers/DataProvider";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const { alertsData } = useData();
+  const { activities } = useData();
   const pathname = usePathname();
   const [currentTime, setCurrentTime] = useState(new Date());
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -103,8 +103,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <Bell size={20} className="shrink-0" />
                 {!isSidebarCollapsed && <span>Alerts</span>}
               </div>
-              {!isSidebarCollapsed && (alertsData?.length || 0) > 0 && <span className="bg-blue-600 text-white text-xs px-2 py-0.5 rounded-full shrink-0">{alertsData.length}</span>}
-              {isSidebarCollapsed && (alertsData?.length || 0) > 0 && <span className="absolute top-2 right-2 w-2 h-2 bg-blue-600 rounded-full"></span>}
+              {!isSidebarCollapsed && (activities?.length || 0) > 0 && <span className="bg-blue-600 text-white text-xs px-2 py-0.5 rounded-full shrink-0">{activities.length}</span>}
+              {isSidebarCollapsed && (activities?.length || 0) > 0 && <span className="absolute top-2 right-2 w-2 h-2 bg-blue-600 rounded-full"></span>}
             </Link>
             <Link href="/conductors" className={getLinkClass("/conductors")}>
               <Users size={20} className="shrink-0" />

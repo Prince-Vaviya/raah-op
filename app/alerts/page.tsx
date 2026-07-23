@@ -181,13 +181,13 @@ export default function Alerts() {
 
                 <div className="flex items-center gap-3 pt-2">
                   <button 
-                    onClick={() => handleAction(alert.id, 'rejected')}
+                    onClick={() => handleAction(Number(alert.id), 'rejected')}
                     className="flex items-center gap-2 px-5 py-2 cursor-pointer bg-[#ffffff] hover:bg-[#f46666] hover:text-white border border-slate-200 text-slate-600 rounded-full transition-colors text-sm font-medium"
                   >
                     <X size={16} /> Reject Action
                   </button>
                   <button 
-                    onClick={() => handleAction(alert.id, 'approved')}
+                    onClick={() => handleAction(Number(alert.id), 'approved')}
                     className="flex items-center gap-2 px-5 py-2 cursor-pointer bg-[#10b981] hover:bg-[#059669] text-white rounded-full shadow-sm transition-colors text-sm font-medium"
                   >
                     <Check size={16} /> Approve Action

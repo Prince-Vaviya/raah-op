@@ -48,7 +48,7 @@ export default function SimulationPanel() {
     ];
     
     setActivities(prev => {
-      const newId = prev.length ? Math.max(...prev.map(a => a.id)) + 1 : 1;
+      const newId = prev.length ? Math.max(...prev.map(a => Number(a.id))) + 1 : 1;
       const newActivity = {
         id: newId,
         title: titles[Math.floor(Math.random() * titles.length)],
