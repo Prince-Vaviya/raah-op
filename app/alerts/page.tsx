@@ -130,52 +130,61 @@ export default function Alerts() {
         </button>
       </div>
 
-      {/* Filter Tabs */}
-      <div className="flex items-center gap-2 border-b border-slate-200 pb-3">
+      {/* Filter Tabs with Sliding Background Indicator */}
+      <div className="relative inline-flex items-center bg-slate-100/90 p-1.5 rounded-xl border border-slate-200/80 shadow-xs max-w-fit">
+        {/* Sliding Active Pill Indicator */}
+        <div
+          className="absolute top-1.5 bottom-1.5 bg-blue-600 rounded-lg transition-all duration-300 ease-out shadow-xs"
+          style={{
+            left: filter === 'all' ? '6px' : filter === 'error' ? 'calc(25% + 1.5px)' : filter === 'warning' ? 'calc(50% + 1.5px)' : 'calc(75% + 1.5px)',
+            width: 'calc(25% - 3px)'
+          }}
+        />
+
         <button
           onClick={() => setFilter('all')}
-          className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${
-            filter === 'all' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'
+          className={`relative z-10 min-w-[110px] flex items-center justify-center gap-2 px-3.5 py-1.5 text-xs font-bold rounded-lg transition-colors cursor-pointer ${
+            filter === 'all' ? 'text-white' : 'text-slate-600 hover:text-slate-900'
           }`}
         >
-          All alerts
-          <span className={`px-1.5 py-0.2 rounded-full text-[11px] font-bold ${filter === 'all' ? 'bg-red-500 text-white' : 'bg-slate-200 text-slate-700'}`}>
+          <span>All alerts</span>
+          <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-extrabold ${filter === 'all' ? 'bg-red-500 text-white' : 'bg-red-500 text-white'}`}>
             {activities.length}
           </span>
         </button>
 
         <button
           onClick={() => setFilter('error')}
-          className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${
-            filter === 'error' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'
+          className={`relative z-10 min-w-[110px] flex items-center justify-center gap-2 px-3.5 py-1.5 text-xs font-bold rounded-lg transition-colors cursor-pointer ${
+            filter === 'error' ? 'text-white' : 'text-slate-600 hover:text-slate-900'
           }`}
         >
-          Critical
-          <span className="px-1.5 py-0.2 bg-red-500 text-white rounded-full text-[11px] font-bold">
+          <span>Critical</span>
+          <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-extrabold ${filter === 'error' ? 'bg-red-500 text-white' : 'bg-red-500 text-white'}`}>
             {criticalCount}
           </span>
         </button>
 
         <button
           onClick={() => setFilter('warning')}
-          className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${
-            filter === 'warning' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'
+          className={`relative z-10 min-w-[110px] flex items-center justify-center gap-2 px-3.5 py-1.5 text-xs font-bold rounded-lg transition-colors cursor-pointer ${
+            filter === 'warning' ? 'text-white' : 'text-slate-600 hover:text-slate-900'
           }`}
         >
-          Warning
-          <span className="px-1.5 py-0.2 bg-amber-500 text-white rounded-full text-[11px] font-bold">
+          <span>Warning</span>
+          <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-extrabold ${filter === 'warning' ? 'bg-amber-500 text-white' : 'bg-amber-500 text-white'}`}>
             {warningCount}
           </span>
         </button>
 
         <button
           onClick={() => setFilter('resolved')}
-          className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${
-            filter === 'resolved' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'
+          className={`relative z-10 min-w-[110px] flex items-center justify-center gap-2 px-3.5 py-1.5 text-xs font-bold rounded-lg transition-colors cursor-pointer ${
+            filter === 'resolved' ? 'text-white' : 'text-slate-600 hover:text-slate-900'
           }`}
         >
-          Resolved
-          <span className="px-1.5 py-0.2 bg-slate-500 text-white rounded-full text-[11px] font-bold">
+          <span>Resolved</span>
+          <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-extrabold ${filter === 'resolved' ? 'bg-white/20 text-white' : 'bg-slate-400 text-white'}`}>
             {resolvedCount}
           </span>
         </button>

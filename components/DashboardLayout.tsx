@@ -1,31 +1,51 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Map as MapIcon, Route, Lightbulb, Bell, CloudRain, Clock, Wrench, Users } from "lucide-react";
+import { LayoutDashboard, Map as MapIcon, Route, Bell, Wrench, Users } from "lucide-react";
 import { useData } from "@/providers/DataProvider";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { activities } = useData();
   const pathname = usePathname();
-  const [currentTime, setCurrentTime] = useState(new Date());
+  
+  const navRef = useRef<HTMLDivElement>(null);
+  const [indicatorStyle, setIndicatorStyle] = useState({ left: 0, width: 0, opacity: 0 });
+
+  const navItems = [
+    { href: '/', label: 'Overview', icon: LayoutDashboard, isExact: true },
+    { href: '/livemap', label: 'Live Map', icon: MapIcon },
+    { href: '/routeinspector', label: 'Route Inspector', icon: Route },
+    { href: '/maintenance', label: 'Maintenance', icon: Wrench },
+    { href: '/alerts', label: 'Alerts', icon: Bell, badge: activities?.length || 0 },
+    { href: '/conductors', label: 'Conductors', icon: Users },
+  ];
 
   useEffect(() => {
-    const timer = setInterval(() => setCurrentTime(new Date()), 60000);
-    return () => clearInterval(timer);
-  }, []);
+    const updateIndicator = () => {
+      if (!navRef.current) return;
+      const activeIndex = navItems.findIndex(item => 
+        item.isExact ? pathname === item.href : pathname.startsWith(item.href)
+      );
 
-  const [metrics] = useState({
-    temperature: 29
-  });
+      if (activeIndex !== -1) {
+        const activeLink = navRef.current.children[activeIndex + 1] as HTMLElement; // +1 to skip absolute indicator
+        if (activeLink) {
+          setIndicatorStyle({
+            left: activeLink.offsetLeft,
+            width: activeLink.offsetWidth,
+            opacity: 1
+          });
+        }
+      } else {
+        setIndicatorStyle(prev => ({ ...prev, opacity: 0 }));
+      }
+    };
 
-  const getNavItemClass = (path: string) => {
-    const isActive = pathname === path;
-    const baseClass = "flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-semibold transition-all whitespace-nowrap";
-    return isActive
-      ? `${baseClass} bg-blue-50 text-blue-600 shadow-sm`
-      : `${baseClass} text-slate-600 hover:bg-slate-50 hover:text-slate-900`;
-  };
+    updateIndicator();
+    window.addEventListener('resize', updateIndicator);
+    return () => window.removeEventListener('resize', updateIndicator);
+  }, [pathname, activities]);
 
   useEffect(() => {
     if (pathname !== '/login') {
@@ -55,38 +75,46 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </Link>
           </div>
 
-          {/* Center: Navigation Links */}
-          <nav className="flex items-center gap-2 overflow-x-auto mx-auto px-4 no-scrollbar">
-            <Link href="/" className={getNavItemClass("/")}>
-              <LayoutDashboard size={19} />
-              <span>Overview</span>
-            </Link>
-            <Link href="/livemap" className={getNavItemClass("/livemap")}>
-              <MapIcon size={19} />
-              <span>Live Map</span>
-            </Link>
-            <Link href="/routeinspector" className={getNavItemClass("/routeinspector")}>
-              <Route size={19} />
-              <span>Route Inspector</span>
-            </Link>
-            <Link href="/maintenance" className={getNavItemClass("/maintenance")}>
-              <Wrench size={19} />
-              <span>Maintenance</span>
-            </Link>
-            <Link href="/alerts" className={getNavItemClass("/alerts")}>
-              <Bell size={19} />
-              <span>Alerts</span>
-              {(activities?.length || 0) > 0 && (
-                <span className="ml-1 bg-red-500 text-white text-xs px-2.5 py-0.5 rounded-full font-bold">
-                  {activities.length}
-                </span>
-              )}
-            </Link>
-            <Link href="/conductors" className={getNavItemClass("/conductors")}>
-              <Users size={19} />
-              <span>Conductors</span>
-            </Link>
-          </nav>
+          {/* Center: Navigation Links with Dynamic Sliding Indicator */}
+          <div 
+            ref={navRef}
+            className="relative flex items-center gap-1 p-1.5 rounded-xl mx-auto"
+          >
+            {/* Sliding Pill Indicator */}
+            <div
+              className="absolute top-1.5 bottom-1.5 bg-blue-600 rounded-lg transition-all duration-300 ease-out"
+              style={{
+                left: `${indicatorStyle.left}px`,
+                width: `${indicatorStyle.width}px`,
+                opacity: indicatorStyle.opacity
+              }}
+            />
+
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = item.isExact ? pathname === item.href : pathname.startsWith(item.href);
+
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`relative z-10 flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-colors whitespace-nowrap ${
+                    isActive ? 'text-white' : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  <Icon size={16} />
+                  <span>{item.label}</span>
+                  {item.badge !== undefined && item.badge > 0 && (
+                    <span className={`ml-0.5 text-[10px] px-2 py-0.5 rounded-full font-extrabold ${
+                      isActive ? 'bg-red-500 text-white' : 'bg-red-500 text-white'
+                    }`}>
+                      {item.badge}
+                    </span>
+                  )}
+                </Link>
+              );
+            })}
+          </div>
 
           {/* Right: Operator Profile */}
           <div className="flex items-center gap-3.5 shrink-0">
