@@ -1,5 +1,5 @@
 "use client";
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useRef } from "react";
 import { fetchAlerts, fetchAnalytics, fetchRoutes, fetchTelemetry } from "@/lib/api";
 import { useWebSocket } from "@/lib/useWebSocket";
 
@@ -39,6 +39,8 @@ type DataContextType = {
   setMetrics: React.Dispatch<React.SetStateAction<Metrics>>;
   activities: Activity[];
   setActivities: React.Dispatch<React.SetStateAction<Activity[]>>;
+  dismissAlert: (id: string | number) => void;
+  refreshAlerts: () => Promise<void>;
   weeklyRidership: WeeklyData[];
   setWeeklyRidership: React.Dispatch<React.SetStateAction<WeeklyData[]>>;
   peakHourData: PeakHourData[];
@@ -70,7 +72,42 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const [peakHourData, setPeakHourData] = useState<PeakHourData[]>([]);
   const [delayTrend, setDelayTrend] = useState<DelayTrend[]>([]);
 
+  // Track dismissed alert IDs so WS re-pushes don't bring them back
+  const dismissedIds = useRef<Set<string>>(new Set());
+
+  const dismissAlert = (id: string | number) => {
+    const key = String(id);
+    dismissedIds.current.add(key);
+    setActivities(prev => prev.filter(a => String(a.id) !== key));
+  };
+
   const { lastMessage } = useWebSocket();
+
+  const refreshAlerts = async () => {
+    try {
+      const alertsData = await fetchAlerts();
+      if (alertsData) {
+        const newActivities = alertsData
+          .filter((alert: any) => !dismissedIds.current.has(String(alert.id)))
+          .map((alert: any) => {
+            const busNum = alert.trip?.busNumber || 'Bus';
+            const routeName = alert.trip?.route?.routeName ? ` (Route ${alert.trip.route.routeName})` : '';
+            return {
+              id: alert.id,
+              trip_id: alert.tripId,
+              title: `Bus ${busNum}${routeName}`,
+              time: new Date(alert.createdAt || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+              type: (alert.predictedGapMeters < 300 || alert.confidenceNote?.includes('CRITICAL')) ? "error" : "warning",
+              description: `Predicted gap: ${Math.round(alert.predictedGapMeters)}m`,
+              aiSummary: alert.confidenceNote || "AI detected bunching"
+            };
+          });
+        setActivities(newActivities as any);
+      }
+    } catch (err) {
+      console.warn("Failed to refresh alerts:", err);
+    }
+  };
 
   useEffect(() => {
     const fetchInitialData = async () => {
@@ -80,19 +117,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
           setMetrics(m => ({ ...m, activeBuses: telemetryData.length }));
         }
 
-        const alertsData = await fetchAlerts();
-        if (alertsData) {
-          const newActivities = alertsData.map((alert: any) => ({
-            id: alert.id,
-            trip_id: alert.tripId,
-            title: `Bus Bunching Alert`,
-            time: new Date(alert.createdAt).toLocaleTimeString(),
-            type: alert.predictedGapMeters < 200 ? "error" : "warning",
-            description: `Predicted gap: ${alert.predictedGapMeters}m`,
-            aiSummary: alert.confidenceNote || "AI detected bunching"
-          }));
-          setActivities(newActivities as any);
-        }
+        await refreshAlerts();
 
         const analyticsData = await fetchAnalytics();
         if (analyticsData && analyticsData.length > 0) {
@@ -121,20 +146,24 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         }
 
         // We also need to fetch /api/analytics/overview to get the new fields
-        const { API_URL } = await import('@/lib/api');
-        const res = await fetch(`${API_URL}/analytics/overview`);
-        if (res.ok) {
-           const overview = await res.json();
-           setPeakHourData(overview.peakHourData || []);
-           setDelayTrend(overview.delayTrend || []);
-           setRouteHealth(overview.routeHealth || []);
-           setMetrics(m => ({ 
-             ...m, 
-             activeBuses: overview.activeBuses,
-             runningRoutes: overview.runningRoutes,
-             healthScore: overview.healthScore,
-             delayedBuses: overview.delayedBuses,
-           }));
+        try {
+          const { API_URL } = await import('@/lib/api');
+          const res = await fetch(`${API_URL}/analytics/overview`);
+          if (res.ok) {
+             const overview = await res.json();
+             setPeakHourData(overview.peakHourData || []);
+             setDelayTrend(overview.delayTrend || []);
+             setRouteHealth(overview.routeHealth || []);
+             setMetrics(m => ({ 
+               ...m, 
+               activeBuses: overview.activeBuses,
+               runningRoutes: overview.runningRoutes,
+               healthScore: overview.healthScore,
+               delayedBuses: overview.delayedBuses,
+             }));
+          }
+        } catch (err) {
+          console.warn("Failed to fetch analytics overview:", err);
         }
 
       } catch (e) {
@@ -149,16 +178,24 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     if (!lastMessage) return;
     if (lastMessage.type === 'ALERT') {
       const alert = lastMessage.payload;
+      const busNum = alert.trip?.busNumber || 'Bus';
+      const routeName = alert.trip?.route?.routeName ? ` (Route ${alert.trip.route.routeName})` : '';
       const newActivity = {
         id: alert.id,
         trip_id: alert.tripId,
-        title: `Bus Bunching Alert`,
-        time: new Date().toLocaleTimeString(),
-        type: alert.predictedGapMeters < 200 ? "error" : "warning",
-        description: `Predicted gap: ${alert.predictedGapMeters}m`,
+        title: `Bus ${busNum}${routeName}`,
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        type: (alert.predictedGapMeters < 300 || alert.confidenceNote?.includes('CRITICAL')) ? "error" : "warning",
+        description: `Predicted gap: ${Math.round(alert.predictedGapMeters)}m`,
         aiSummary: alert.confidenceNote || "AI detected bunching"
       };
-      setActivities(prev => [newActivity, ...prev].slice(0, 10));
+      setActivities(prev => {
+        // Don't re-add dismissed alerts
+        if (dismissedIds.current.has(String(newActivity.id))) return prev;
+        // Don't add duplicates
+        if (prev.some(a => String(a.id) === String(newActivity.id))) return prev;
+        return [newActivity, ...prev].slice(0, 10);
+      });
     } else if (lastMessage.type === 'TELEMETRY') {
       // Could update activeBuses here if we track distinct trips, 
       // but for simplicity we rely on the initial fetch or a periodic poll.
@@ -172,6 +209,8 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         setMetrics,
         activities,
         setActivities,
+        dismissAlert,
+        refreshAlerts,
         weeklyRidership,
         setWeeklyRidership,
         peakHourData,

@@ -2,21 +2,36 @@ export const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000
 export const WS_URL = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:4000/ws';
 
 export async function fetchTelemetry() {
-  const res = await fetch(`${API_URL}/telemetry`);
-  if (!res.ok) throw new Error('Failed to fetch telemetry');
-  return res.json();
+  try {
+    const res = await fetch(`${API_URL}/telemetry`);
+    if (!res.ok) return [];
+    return await res.json();
+  } catch (err) {
+    console.warn('Backend telemetry unreachable:', err);
+    return [];
+  }
 }
 
 export async function fetchAlerts() {
-  const res = await fetch(`${API_URL}/alerts`);
-  if (!res.ok) throw new Error('Failed to fetch alerts');
-  return res.json();
+  try {
+    const res = await fetch(`${API_URL}/alerts`);
+    if (!res.ok) return [];
+    return await res.json();
+  } catch (err) {
+    console.warn('Backend alerts unreachable:', err);
+    return [];
+  }
 }
 
 export async function fetchAnalytics() {
-  const res = await fetch(`${API_URL}/analytics/daily`);
-  if (!res.ok) throw new Error('Failed to fetch analytics');
-  return res.json();
+  try {
+    const res = await fetch(`${API_URL}/analytics/daily`);
+    if (!res.ok) return [];
+    return await res.json();
+  } catch (err) {
+    console.warn('Backend analytics unreachable:', err);
+    return [];
+  }
 }
 
 export async function fetchRoutes() {

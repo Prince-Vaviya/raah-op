@@ -500,37 +500,6 @@ export default function LiveMap() {
         )}
       </div>
 
-      <div className="absolute bottom-8 right-8 bg-white/95 backdrop-blur-md rounded-2xl shadow-xl p-6 min-w-[240px] border border-slate-100">
-        <h3 className="text-xs font-bold text-slate-400 tracking-widest mb-5 uppercase">Status</h3>
-        <div className="space-y-4">
-          <div className="flex items-center gap-3">
-            <span className="w-4 h-4 rounded-full bg-[#10b981] shadow-sm"></span>
-            <span className="text-slate-700 font-medium text-sm">On Time</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="w-4 h-4 rounded-full bg-[#f59e0b] shadow-sm"></span>
-            <span className="text-slate-700 font-medium text-sm">Delayed / Crowded</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Before/After Impact Metrics Widget */}
-      <div className="absolute bottom-8 left-8 bg-white/95 backdrop-blur-md rounded-2xl shadow-xl p-5 border border-emerald-100 flex items-center gap-4 animate-in fade-in slide-in-from-bottom-4">
-        <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
-          <Layers size={24} className="text-emerald-600" />
-        </div>
-        <div>
-          <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Impact (Today)</h3>
-          <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-black text-slate-800">14</span>
-            <span className="text-sm font-medium text-slate-600">bunching events prevented</span>
-          </div>
-          <div className="text-xs font-semibold text-emerald-600 bg-emerald-50 inline-block px-2 py-0.5 rounded-full mt-1">
-            ↓ 22% avg wait time
-          </div>
-        </div>
-      </div>
-
       {selectedTripId && (
         <div className="absolute top-4 right-4 w-96 bg-white rounded-2xl shadow-2xl border border-slate-200 flex flex-col h-[600px] overflow-hidden z-50">
           <div className="bg-blue-600 p-4 text-white flex justify-between items-center shrink-0">
