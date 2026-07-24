@@ -61,80 +61,98 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }
 
   return (
-    <div className="flex flex-col h-screen w-full bg-[#f4f7fb] text-slate-800 font-sans overflow-hidden">
-      {/* Floating Navbar */}
-      <div className="w-full px-6 pt-5 shrink-0 z-30">
-        <header className="h-20 bg-white/95 backdrop-blur-md border border-slate-200/80 rounded-2xl flex items-center justify-between px-7 shadow-md shadow-slate-200/40">
-          {/* Left: Brand Logo */}
-          <div className="flex items-center gap-3.5 shrink-0">
-            <Link href="/" className="flex items-center gap-3 group">
-              <img src="/raah_logo.svg" alt="RAAH Logo" className="w-9 h-9 shrink-0 object-contain" />
-              <span className="text-xl font-black tracking-tight text-slate-900 group-hover:text-blue-600 transition-colors">
-                RAAH
-              </span>
-            </Link>
-          </div>
+    <div className="flex flex-col h-screen w-full bg-linear-to-br from-[#f8fafc] via-[#f1f5f9] to-[#e2e8f0] text-slate-800 font-sans overflow-hidden relative">
+      {/* Background Ambient Mesh Light Blur */}
+      <div className="absolute bottom-0 right-1/4 w-150 h-150 bg-indigo-400/10 rounded-full blur-[100px] pointer-events-none z-0"></div>
 
-          {/* Center: Navigation Links with Dynamic Sliding Indicator */}
-          <div 
-            ref={navRef}
-            className="relative flex items-center gap-1 p-1.5 rounded-xl mx-auto"
-          >
-            {/* Sliding Pill Indicator */}
-            <div
-              className="absolute top-1.5 bottom-1.5 bg-blue-600 rounded-lg transition-all duration-300 ease-out"
-              style={{
-                left: `${indicatorStyle.left}px`,
-                width: `${indicatorStyle.width}px`,
-                opacity: indicatorStyle.opacity
-              }}
-            />
+      {/* Floating Liquid Glass Overlay Header with Top Blur Mask */}
+      <div className="absolute top-0 left-0 right-0 w-full shrink-0 z-40 pointer-events-none">
+        {/* Top Gap Blur Shield */}
+        <div className="h-6 w-full bg-slate-100/40 backdrop-blur-md"></div>
 
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = item.isExact ? pathname === item.href : pathname.startsWith(item.href);
+        <div className="px-6">
+          {/* Main Liquid Glass Capsule Bar */}
+          <header className="h-21 bg-linear-to-r from-white/60 via-blue-50/40 to-white/60 backdrop-blur-2xl border border-white/90 rounded-4xl flex items-center justify-between px-6 shadow-[0_5px_50px_0_rgba(59,130,246,0.18),inset_0_2px_4px_0_rgba(255,255,255,0.9),inset_0_-2px_4px_0_rgba(255,255,255,0.4)] backdrop-saturate-200 relative overflow-hidden pointer-events-auto transition-all">
+            
+            {/* Top Light Reflective Specular Rim */}
+            <div className="absolute top-0 left-0 right-0 h-[1.5px] bg-linear-to-r from-transparent via-white to-transparent opacity-95"></div>
 
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`relative z-10 flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-colors whitespace-nowrap ${
-                    isActive ? 'text-white' : 'text-slate-600 hover:text-slate-900'
-                  }`}
-                >
-                  <Icon size={16} />
-                  <span>{item.label}</span>
-                  {item.badge !== undefined && item.badge > 0 && (
-                    <span className={`ml-0.5 text-[10px] px-2 py-0.5 rounded-full font-extrabold ${
-                      isActive ? 'bg-red-500 text-white' : 'bg-red-500 text-white'
-                    }`}>
-                      {item.badge}
-                    </span>
-                  )}
-                </Link>
-              );
-            })}
-          </div>
+            {/* Left: Brand Logo & Title */}
+            <div className="flex items-center gap-3 shrink-0 relative z-10">
+              <Link href="/" className="flex items-center gap-2.5 group">
+                <img src="/raah_logo.svg" alt="RAAH Logo" className="w-6 h-6 shrink-0 object-contain drop-shadow-xs" />
+                <span className="text-sm font-black tracking-tight text-slate-900 group-hover:text-blue-600 transition-colors">
+                  RAAH
+                </span>
+              </Link>
+            </div>
 
-          {/* Right: Operator Profile */}
-          <div className="flex items-center gap-3.5 shrink-0">
-            <div className="relative">
-              <div className="w-9 h-9 bg-slate-100 rounded-full flex items-center justify-center overflow-hidden border border-slate-200 shadow-xs">
-                <img src="/avatar_operator.svg" alt="Profile" className="w-full h-full object-cover" />
+            {/* Center: Navigation Bar with Liquid Sliding Pill */}
+            <div 
+              ref={navRef}
+              className="relative z-10 flex items-center gap-1.5 px-2 py-2 mx-auto"
+            >
+              {/* Dynamic Sliding Vibrant Blue Active Pill */}
+              <div
+                className="absolute top-1 bottom-1 bg-blue-600 rounded-full transition-all duration-300 ease-out shadow-[0_4px_14px_0_rgba(37,99,235,0.45)] border border-blue-400/30"
+                style={{
+                  left: `${indicatorStyle.left}px`,
+                  width: `${indicatorStyle.width}px`,
+                  opacity: indicatorStyle.opacity
+                }}
+              />
+
+              {navItems.map((item) => {
+                const Icon = item.icon;
+                const isActive = item.isExact ? pathname === item.href : pathname.startsWith(item.href);
+
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`relative z-10 flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold transition-all whitespace-nowrap ${
+                      isActive 
+                        ? 'text-white drop-shadow-xs' 
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-white/30'
+                    }`}
+                  >
+                    <Icon size={15} />
+                    <span>{item.label}</span>
+                    {item.badge !== undefined && item.badge > 0 && (
+                      <span className={`ml-0.5 text-[10px] px-1.5 py-0.2 rounded-full font-extrabold transition-all ${
+                        isActive 
+                          ? 'bg-red-500 text-white shadow-xs' 
+                          : 'bg-red-500 text-white shadow-xs'
+                      }`}>
+                        {item.badge}
+                      </span>
+                    )}
+                  </Link>
+                );
+              })}
+            </div>
+
+            {/* Right: Operator Profile Capsule */}
+            <div className="flex items-center gap-2.5 shrink-0 relative z-10 pl-2">
+              <div className="relative">
+                <div className="w-8 h-8 rounded-full flex items-center justify-center overflow-hidden border border-white/90 shadow-xs ring-2 ring-blue-500/20">
+                  <img src="/avatar_operator.svg" alt="Profile" className="w-full h-full object-cover" />
+                </div>
+                <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 border-2 border-white rounded-full shadow-xs"></span>
               </div>
-              <span className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full"></span>
+              <div className="hidden md:block">
+                <div className="font-bold text-xs text-slate-900 leading-tight">Arjun Singh</div>
+                <div className="text-[10px] font-semibold text-slate-500">Operator</div>
+              </div>
             </div>
-            <div className="hidden md:block">
-              <div className="font-bold text-xs text-slate-900 leading-tight">Arjun Singh</div>
-              <div className="text-[10px] font-medium text-slate-500">Operator</div>
-            </div>
-          </div>
-        </header>
+
+          </header>
+        </div>
       </div>
 
-      {/* Main Content Body */}
-      <main className="flex-1 flex flex-col h-full overflow-hidden">
-        <div className={`flex-1 relative ${pathname === '/livemap' ? 'overflow-hidden p-4' : 'p-6 md:p-8 overflow-y-auto'}`}>
+      {/* Main Content Scroll Area - Passes under Floating Navbar */}
+      <main className="flex-1 flex flex-col h-full overflow-hidden relative z-10">
+        <div className={`flex-1 relative ${pathname === '/livemap' ? 'overflow-hidden p-4 pt-28' : 'px-6 md:px-8 pb-8 pt-28 overflow-y-auto'}`}>
           <div className={pathname === '/livemap' ? 'w-full h-full rounded-2xl overflow-hidden shadow-xs' : 'max-w-7xl mx-auto space-y-6'}>
             {children}
           </div>

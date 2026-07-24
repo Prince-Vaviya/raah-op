@@ -39,18 +39,19 @@ export default function MissionControl() {
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-12 font-sans text-slate-800">
       {/* Header Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white/70 backdrop-blur-md rounded-2xl p-6 border border-white/80 shadow-xs relative overflow-hidden">
+        <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white to-transparent opacity-80"></div>
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Network Overview</h1>
         </div>
 
-        <div className="flex items-center gap-1.5 bg-slate-100 p-1.5 rounded-xl self-start sm:self-auto">
+        <div className="flex items-center gap-1.5 bg-slate-200/50 backdrop-blur-md p-1.5 rounded-xl border border-white/60 self-start sm:self-auto">
           {filters.map(f => (
             <button
               key={f}
               onClick={() => setTimeFilter(f)}
               className={`px-4 py-1.5 text-xs font-bold rounded-lg cursor-pointer transition-all ${
-                timeFilter === f ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-600 hover:text-slate-900'
+                timeFilter === f ? 'bg-white/90 text-blue-600 shadow-xs backdrop-blur-sm' : 'text-slate-600 hover:text-slate-900'
               }`}
             >
               {f}
@@ -62,10 +63,11 @@ export default function MissionControl() {
       {/* KPI Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Total Ridership */}
-        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
+        <div className="bg-white/70 backdrop-blur-md p-5 rounded-2xl border border-white/80 shadow-xs flex flex-col justify-between hover:shadow-md transition-all group relative overflow-hidden">
+          <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/80 to-transparent"></div>
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Total Ridership</span>
-            <div className="p-2 bg-blue-50 text-blue-600 rounded-xl">
+            <div className="p-2 bg-blue-500/10 text-blue-600 rounded-xl border border-blue-500/20 backdrop-blur-sm">
               <Users size={18} />
             </div>
           </div>
@@ -81,10 +83,11 @@ export default function MissionControl() {
         </div>
 
         {/* On-Time Rate */}
-        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
+        <div className="bg-white/70 backdrop-blur-md p-5 rounded-2xl border border-white/80 shadow-xs flex flex-col justify-between hover:shadow-md transition-all group relative overflow-hidden">
+          <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/80 to-transparent"></div>
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">On-Time Rate</span>
-            <div className="p-2 bg-emerald-50 text-emerald-600 rounded-xl">
+            <div className="p-2 bg-emerald-500/10 text-emerald-600 rounded-xl border border-emerald-500/20 backdrop-blur-sm">
               <Clock size={18} />
             </div>
           </div>
@@ -100,10 +103,11 @@ export default function MissionControl() {
         </div>
 
         {/* Avg Delay */}
-        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
+        <div className="bg-white/70 backdrop-blur-md p-5 rounded-2xl border border-white/80 shadow-xs flex flex-col justify-between hover:shadow-md transition-all group relative overflow-hidden">
+          <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/80 to-transparent"></div>
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Avg Delay</span>
-            <div className="p-2 bg-amber-50 text-amber-600 rounded-xl">
+            <div className="p-2 bg-amber-500/10 text-amber-600 rounded-xl border border-amber-500/20 backdrop-blur-sm">
               <AlertTriangle size={18} />
             </div>
           </div>
@@ -119,10 +123,11 @@ export default function MissionControl() {
         </div>
 
         {/* Fuel Efficiency */}
-        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
+        <div className="bg-white/70 backdrop-blur-md p-5 rounded-2xl border border-white/80 shadow-xs flex flex-col justify-between hover:shadow-md transition-all group relative overflow-hidden">
+          <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/80 to-transparent"></div>
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Fuel Efficiency</span>
-            <div className="p-2 bg-indigo-50 text-indigo-600 rounded-xl">
+            <div className="p-2 bg-indigo-500/10 text-indigo-600 rounded-xl border border-indigo-500/20 backdrop-blur-sm">
               <Fuel size={18} />
             </div>
           </div>
@@ -141,13 +146,14 @@ export default function MissionControl() {
       {/* Row 1: Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Ridership Trend */}
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col">
+        <div className="bg-white/70 backdrop-blur-md p-6 rounded-2xl border border-white/80 shadow-xs flex flex-col relative overflow-hidden">
+          <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/80 to-transparent"></div>
           <div className="flex items-center justify-between mb-6">
             <div>
               <h3 className="text-base font-bold text-slate-900">Ridership Trend</h3>
               <p className="text-xs text-slate-500 mt-0.5">Passenger volume over time</p>
             </div>
-            <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-lg">
+            <span className="text-xs font-bold text-blue-600 bg-blue-500/10 border border-blue-500/20 px-2.5 py-1 rounded-lg backdrop-blur-sm">
               {timeFilter} View
             </span>
           </div>
@@ -165,7 +171,7 @@ export default function MissionControl() {
                 <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#64748b' }} tickFormatter={(val) => `${val}k`} />
                 <Tooltip 
                   cursor={{ stroke: '#cbd5e1', strokeWidth: 1, strokeDasharray: '4 4' }} 
-                  contentStyle={{ backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }} 
+                  contentStyle={{ backgroundColor: 'rgba(255, 255, 255, 0.9)', backdropFilter: 'blur(8px)', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.8)', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }} 
                 />
                 <Area type="monotone" dataKey="val" stroke="#2563eb" strokeWidth={3} fillOpacity={1} fill="url(#colorVal)" />
               </AreaChart>
@@ -174,13 +180,14 @@ export default function MissionControl() {
         </div>
 
         {/* Peak Hour Distribution */}
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col">
+        <div className="bg-white/70 backdrop-blur-md p-6 rounded-2xl border border-white/80 shadow-xs flex flex-col relative overflow-hidden">
+          <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/80 to-transparent"></div>
           <div className="flex items-center justify-between mb-6">
             <div>
               <h3 className="text-base font-bold text-slate-900">Peak Hour Distribution</h3>
               <p className="text-xs text-slate-500 mt-0.5">Passenger load per operational hour</p>
             </div>
-            <span className="text-xs font-bold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-lg">
+            <span className="text-xs font-bold text-slate-600 bg-slate-200/60 border border-white/60 px-2.5 py-1 rounded-lg backdrop-blur-sm">
               Pax Count
             </span>
           </div>
@@ -191,8 +198,8 @@ export default function MissionControl() {
                 <XAxis dataKey="time" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#64748b' }} dy={8} interval={1} />
                 <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#64748b' }} tickFormatter={(val) => `${val / 1000}k`} />
                 <Tooltip 
-                  cursor={{ fill: '#f8fafc' }} 
-                  contentStyle={{ backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }} 
+                  cursor={{ fill: 'rgba(248, 250, 252, 0.5)' }} 
+                  contentStyle={{ backgroundColor: 'rgba(255, 255, 255, 0.9)', backdropFilter: 'blur(8px)', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.8)', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }} 
                 />
                 <Bar dataKey="passengers" radius={[6, 6, 6, 6]}>
                   {displayPeakHourData.map((entry, index) => (
@@ -208,7 +215,8 @@ export default function MissionControl() {
       {/* Row 2: Route Health & Delay Trend */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Route Health Scores */}
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col">
+        <div className="bg-white/70 backdrop-blur-md p-6 rounded-2xl border border-white/80 shadow-xs flex flex-col relative overflow-hidden">
+          <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/80 to-transparent"></div>
           <div className="flex items-center justify-between mb-6">
             <div>
               <h3 className="text-base font-bold text-slate-900">Route Health Scores</h3>
@@ -223,7 +231,7 @@ export default function MissionControl() {
               const badgeLabel = route.name ? `R-${route.name.replace(/[^0-9A-Z]/gi, '')}` : `R-${idx + 1}`;
 
               return (
-                <div key={route.id} className="p-3 bg-slate-50/80 rounded-xl border border-slate-100 flex items-center gap-3">
+                <div key={route.id} className="p-3 bg-white/50 backdrop-blur-sm rounded-xl border border-white/60 flex items-center gap-3 shadow-xs">
                   <div className={`px-2.5 py-1 rounded-lg ${badgeBg} text-white font-extrabold text-xs shrink-0 shadow-xs`}>
                     {badgeLabel}
                   </div>
@@ -234,7 +242,7 @@ export default function MissionControl() {
                         {route.score} / 100
                       </span>
                     </div>
-                    <div className="h-2 w-full bg-slate-200/80 rounded-full overflow-hidden flex">
+                    <div className="h-2 w-full bg-slate-200/60 rounded-full overflow-hidden flex">
                       <div
                         className={`h-full ${badgeBg} rounded-full transition-all duration-500`}
                         style={{ width: `${route.score}%` }}
@@ -248,13 +256,14 @@ export default function MissionControl() {
         </div>
 
         {/* Delay Trend */}
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col">
+        <div className="bg-white/70 backdrop-blur-md p-6 rounded-2xl border border-white/80 shadow-xs flex flex-col relative overflow-hidden">
+          <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/80 to-transparent"></div>
           <div className="flex items-center justify-between mb-6">
             <div>
               <h3 className="text-base font-bold text-slate-900">Delay Trend</h3>
               <p className="text-xs text-slate-500 mt-0.5">Network-wide average delay progression</p>
             </div>
-            <span className="text-xs font-bold text-red-500 bg-red-50 px-2.5 py-1 rounded-lg">
+            <span className="text-xs font-bold text-red-600 bg-red-500/10 border border-red-500/20 px-2.5 py-1 rounded-lg backdrop-blur-sm">
               Minutes
             </span>
           </div>
@@ -265,7 +274,7 @@ export default function MissionControl() {
                 <XAxis dataKey="time" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#64748b' }} dy={8} />
                 <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#64748b' }} domain={[0, 'auto']} tickCount={5} />
                 <Tooltip 
-                  contentStyle={{ backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }} 
+                  contentStyle={{ backgroundColor: 'rgba(255, 255, 255, 0.9)', backdropFilter: 'blur(8px)', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.8)', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }} 
                 />
                 <Line type="monotone" dataKey="delay" stroke="#dc2626" strokeWidth={3} dot={false} activeDot={{ r: 6, fill: '#dc2626', stroke: '#ffffff', strokeWidth: 2 }} />
               </LineChart>
