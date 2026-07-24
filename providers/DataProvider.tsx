@@ -1,6 +1,6 @@
 "use client";
 import React, { createContext, useContext, useState, useEffect, useRef } from "react";
-import { fetchAlerts, fetchAnalytics, fetchRoutes, fetchTelemetry } from "@/lib/api";
+import { fetchAlerts, fetchAnalytics, fetchAnalyticsOverview, fetchTelemetry } from "@/lib/api";
 import { useWebSocket } from "@/lib/useWebSocket";
 
 type Activity = {
@@ -147,21 +147,17 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
 
         // We also need to fetch /api/analytics/overview to get the new fields
         try {
-          const { API_URL } = await import('@/lib/api');
-          const res = await fetch(`${API_URL}/analytics/overview`);
-          if (res.ok) {
-             const overview = await res.json();
-             setPeakHourData(overview.peakHourData || []);
-             setDelayTrend(overview.delayTrend || []);
-             setRouteHealth(overview.routeHealth || []);
-             setMetrics(m => ({ 
-               ...m, 
-               activeBuses: overview.activeBuses,
-               runningRoutes: overview.runningRoutes,
-               healthScore: overview.healthScore,
-               delayedBuses: overview.delayedBuses,
-             }));
-          }
+          const overview = await fetchAnalyticsOverview();
+          setPeakHourData(overview.peakHourData || []);
+          setDelayTrend(overview.delayTrend || []);
+          setRouteHealth(overview.routeHealth || []);
+          setMetrics(m => ({
+            ...m,
+            activeBuses: overview.activeBuses,
+            runningRoutes: overview.runningRoutes,
+            healthScore: overview.healthScore,
+            delayedBuses: overview.delayedBuses,
+          }));
         } catch (err) {
           console.warn("Failed to fetch analytics overview:", err);
         }

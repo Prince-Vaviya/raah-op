@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { Wrench, CheckCircle, Clock, AlertTriangle, ShieldCheck, RefreshCw } from "lucide-react";
-import { API_URL } from "../../lib/api";
+import { API_URL, fetchMaintenance } from "../../lib/api";
 
 export default function MaintenancePage() {
   const [logs, setLogs] = useState<any[]>([]);
@@ -9,11 +9,8 @@ export default function MaintenancePage() {
 
   const fetchLogs = async () => {
     try {
-      const res = await fetch(`${API_URL}/maintenance`);
-      if (res.ok) {
-        const data = await res.json();
-        setLogs(data);
-      }
+      const data = await fetchMaintenance();
+      setLogs(data);
     } catch (e) {
       console.error(e);
     }

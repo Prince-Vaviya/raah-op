@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { API_URL, fetchConductors as apiFetchConductors } from "@/lib/api";
 
 export default function ConductorsPage() {
   const [conductors, setConductors] = useState<any[]>([]);
@@ -12,18 +13,14 @@ export default function ConductorsPage() {
   const [busAssignments, setBusAssignments] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    fetchConductors();
+    loadConductors();
   }, []);
 
-  const fetchConductors = async () => {
+  const loadConductors = async () => {
     setLoading(true);
     try {
-      // In real prod, operator token is needed
-      const res = await fetch('http://localhost:4000/api/operators/verifications?status=PENDING');
-      if (res.ok) {
-        const data = await res.json();
-        setConductors(data);
-      }
+      const data = await apiFetchConductors();
+      setConductors(data);
     } catch (e) {
       console.error(e);
     } finally {
@@ -39,14 +36,14 @@ export default function ConductorsPage() {
     }
 
     try {
-      const res = await fetch(`http://localhost:4000/api/operators/verifications/${id}/approve`, {
+      const res = await fetch(`${API_URL}/operators/verifications/${id}/approve`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: 'VERIFIED', busNumber })
       });
       if (res.ok) {
         alert('Conductor approved and assigned to ' + busNumber);
-        fetchConductors();
+        loadConductors();
       }
     } catch (e) {
       console.error(e);
@@ -55,14 +52,14 @@ export default function ConductorsPage() {
 
   const handleReject = async (id: string) => {
     try {
-      const res = await fetch(`http://localhost:4000/api/operators/verifications/${id}/approve`, {
+      const res = await fetch(`${API_URL}/operators/verifications/${id}/approve`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: 'REJECTED', busNumber: '' })
       });
       if (res.ok) {
         alert('Conductor rejected');
-        fetchConductors();
+        loadConductors();
       }
     } catch (e) {
       console.error(e);
@@ -76,7 +73,7 @@ export default function ConductorsPage() {
           <h1 className="text-3xl font-bold tracking-tight">Conductor Verifications</h1>
           <p className="text-muted-foreground mt-1">Approve pending conductors and assign them to active buses.</p>
         </div>
-        <Button onClick={fetchConductors} variant="outline">Refresh</Button>
+        <Button onClick={loadConductors} variant="outline">Refresh</Button>
       </div>
 
       {loading ? (
