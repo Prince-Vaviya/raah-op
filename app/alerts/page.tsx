@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useData } from "../../providers/DataProvider";
 import { 
   AlertTriangle, 
@@ -24,6 +24,18 @@ export default function Alerts() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [history, setHistory] = useState<{alert: any, action: 'approved' | 'rejected', timestamp: string}[]>([]);
 
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('raah_resolved_alert_history');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) {
+          setHistory(parsed);
+        }
+      }
+    } catch (e) {}
+  }, []);
+
   const handleRefresh = async () => {
     setIsRefreshing(true);
     await refreshAlerts();
@@ -37,11 +49,20 @@ export default function Alerts() {
     if (!alert) return;
 
     dismissAlert(alertId);
-    setHistory(prev => [{
+    
+    const newEntry = {
       alert,
       action,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    }, ...prev]);
+    };
+
+    setHistory(prev => {
+      const updated = [newEntry, ...prev];
+      try {
+        localStorage.setItem('raah_resolved_alert_history', JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
 
     if (action === 'approved') {
       import('../../lib/api').then(({ API_URL }) => {
