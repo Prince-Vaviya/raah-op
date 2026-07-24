@@ -23,7 +23,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     { href: '/routeinspector', label: 'Routes' },
     { href: '/alerts', label: 'Alerts', badge: activities?.length || 0 },
     { href: '/insights', label: 'Insights' },
-    { href: '/maintenance', label: 'Reports' },
+    { href: '/reports', label: 'Reports' },
+    { href: '/contractors', label: 'Contractors' },
+    { href: '/depots', label: 'Depots' },
+    { href: '/maintenance', label: 'Maintenance' },
   ];
 
   // Update clock every minute

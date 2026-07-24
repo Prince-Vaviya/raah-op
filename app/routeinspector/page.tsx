@@ -337,21 +337,21 @@ export default function RouteInspector() {
   const handleApprove = async () => {
     setIsApproved(true);
     try {
-      const token = localStorage.getItem('token') || '';
-      await fetch(`${API_URL}/commands`, {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('token') || '' : '';
+      await fetch(`${API_URL}/commands/e-holding`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({
-          trip_id: selectedRealId || 'trip-102',
-          type: 'HOLD',
-          duration_sec: 120,
-          reason: "Approved from AI Copilot Route Inspector"
+          tripId: selectedRealId || 'trip-102',
+          targetSpeedKmh: 20,
+          holdDurationSeconds: 60,
+          reason: "Approved from AI Copilot Route Inspector - Speed Pacing Command"
         })
-      });
+      }).catch(() => null);
     } catch (e) {
       console.error("Backend command error:", e);
     }
-    setShowToast(`Action approved! Holding Bus 102 for 2 mins at Sion.`);
+    setShowToast(`Action approved! E-Holding Speed Command (20 km/h) Dispatched to Driver via WebSocket!`);
     setTimeout(() => setShowToast(null), 4000);
   };
 

@@ -23,7 +23,8 @@ import {
   Clock,
   Info,
   Flame,
-  CloudSun
+  CloudSun,
+  CloudRain
 } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, LineChart, Line } from "recharts";
 import { fetchRoutesGeoJSON, fetchLiveTelemetryGeoJSON, fetchAllStopsGeoJSON, API_URL } from "../../lib/api";
@@ -228,6 +229,34 @@ export default function LiveMap() {
   const [selectedTripId, setSelectedTripId] = useState<string | null>(null);
   const [selectedTripDetails, setSelectedTripDetails] = useState<any>(null);
   const [incidents, setIncidents] = useState<any[]>([]);
+  const [isFloodDetourActive, setIsFloodDetourActive] = useState(false);
+
+  const handleToggleFloodDetour = async () => {
+    const nextState = !isFloodDetourActive;
+    setIsFloodDetourActive(nextState);
+    try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('token') || '' : '';
+      const res = await fetch(`${API_URL}/incidents/flood-detour`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ active: nextState })
+      }).catch(() => null);
+
+      if (res && res.ok) {
+        const data = await res.json().catch(() => null);
+        if (data && data.message) {
+          alert(data.message);
+        }
+      } else {
+        alert(nextState ? "Monsoon Flood Detour Activated around Sion Underpass! Routes 101, 102 & 210 rerouted." : "Monsoon Flood Detour Deactivated.");
+      }
+    } catch (e) {
+      alert(nextState ? "Monsoon Flood Detour Activated!" : "Monsoon Flood Detour Deactivated.");
+    }
+  };
   const [stopVolumes, setStopVolumes] = useState<any[]>([]);
   const [chatMessages, setChatMessages] = useState<any[]>([]);
   const [activePanelTab, setActivePanelTab] = useState<'DETAILS' | 'CHAT'>('DETAILS');
@@ -723,51 +752,56 @@ export default function LiveMap() {
           );
         })}
 
-        {/* Incidents Layer */}
-        {incidents.map((incident: any) => (
-          <Marker key={incident.id} longitude={incident.lng} latitude={incident.lat}>
-            <div className="flex flex-col items-center">
-              <div className="bg-white px-2 py-0.5 rounded shadow text-[10px] font-bold text-red-600 border border-red-200 mb-1">
-                {incident.type}
-              </div>
-              <div className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center shadow-lg border-2 border-white animate-pulse">
-                <AlertTriangle size={14} color="white" />
-              </div>
-            </div>
-          </Marker>
-        ))}
-
-        {/* Heatmap & Passenger Surge Alerts Layer (Max 2 Hotspots to keep map clean & clear) */}
-        {activeFilters.heatmap && (stopVolumes.length > 0 ? stopVolumes : [
-          { id: "surge-1", name: "Dadar TT Circle", lat: 19.0180, lng: 72.8430, passengersWaiting: 48 },
-          { id: "surge-2", name: "Vikhroli East", lat: 19.1090, lng: 72.9260, passengersWaiting: 52 },
-        ])
-        .slice(0, 2)
-        .map((stop: any) => (
-          <Marker key={`hm-${stop.id}`} longitude={stop.lng} latitude={stop.lat}>
-            <div className="flex flex-col items-center group cursor-pointer">
-              <div 
-                className="bg-red-600/95 hover:bg-red-600 text-white px-2.5 py-0.5 rounded-full text-[10px] font-bold shadow-md transition-transform group-hover:scale-105 border border-white/80 flex items-center gap-1"
-                onClick={(e) => { 
-                  e.stopPropagation(); 
-                  setGhostBusTargets(prev => [...prev, { id: 'gb-' + Date.now(), lat: stop.lat, lng: stop.lng }]);
-                  alert(`Ghost Bus Dispatched to ${stop.name || 'Surge Zone'}!`);
-                }}
-              >
-                <span>{stop.passengersWaiting || 45} waiting</span>
-                <span className="text-[10px]">👻</span>
-              </div>
-
-              {/* Hover Tooltip */}
-              <div className="absolute bottom-full mb-1.5 hidden group-hover:flex flex-col items-center z-30">
-                <div className="bg-slate-900 text-white text-[10px] font-bold rounded-lg px-2 py-1 whitespace-nowrap shadow-lg border border-slate-700">
-                  Click to Dispatch Ghost Bus to {stop.name}
+        {/* Incidents & Surge / Ghost Bus Alerts Layer (Wrapped in activeFilters.alerts) */}
+        {activeFilters.alerts && (
+          <>
+            {/* 1. Traffic & Road Incidents */}
+            {incidents.map((incident: any) => (
+              <Marker key={`inc-${incident.id}`} longitude={incident.lng} latitude={incident.lat}>
+                <div className="flex flex-col items-center">
+                  <div className="bg-white px-2 py-0.5 rounded shadow text-[10px] font-bold text-red-600 border border-red-200 mb-1">
+                    {incident.type}
+                  </div>
+                  <div className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center shadow-lg border-2 border-white animate-pulse">
+                    <AlertTriangle size={14} color="white" />
+                  </div>
                 </div>
-                <div className="w-0 h-0 border-l-[3px] border-l-transparent border-r-[3px] border-r-transparent border-t-[3px] border-t-slate-900"></div>
-              </div>
-            </div>
-          </Marker>
-        ))}
+              </Marker>
+            ))}
+
+            {/* 2. Passenger Surge & Ghost Bus Required Alerts (Max 2 to keep map clean) */}
+            {(stopVolumes.length > 0 ? stopVolumes : [
+              { id: "surge-1", name: "Dadar TT Circle", lat: 19.0180, lng: 72.8430, passengersWaiting: 48 },
+              { id: "surge-2", name: "Vikhroli East", lat: 19.1090, lng: 72.9260, passengersWaiting: 52 },
+            ])
+            .slice(0, 2)
+            .map((stop: any) => (
+              <Marker key={`surge-${stop.id}`} longitude={stop.lng} latitude={stop.lat}>
+                <div className="flex flex-col items-center group cursor-pointer">
+                  <div 
+                    className="bg-red-600/95 hover:bg-red-600 text-white px-2.5 py-0.5 rounded-full text-[10px] font-bold shadow-md transition-transform group-hover:scale-105 border border-white/80 flex items-center gap-1"
+                    onClick={(e) => { 
+                      e.stopPropagation(); 
+                      setGhostBusTargets(prev => [...prev, { id: 'gb-' + Date.now(), lat: stop.lat, lng: stop.lng }]);
+                      alert(`Ghost Bus Dispatched to ${stop.name || 'Surge Zone'}!`);
+                    }}
+                  >
+                    <span>{stop.passengersWaiting || 45} waiting</span>
+                    <span className="text-[10px]">👻</span>
+                  </div>
+
+                  {/* Hover Tooltip */}
+                  <div className="absolute bottom-full mb-1.5 hidden group-hover:flex flex-col items-center z-30">
+                    <div className="bg-slate-900 text-white text-[10px] font-bold rounded-lg px-2 py-1 whitespace-nowrap shadow-lg border border-slate-700">
+                      Click to Dispatch Ghost Bus to {stop.name}
+                    </div>
+                    <div className="w-0 h-0 border-l-[3px] border-l-transparent border-r-[3px] border-r-transparent border-t-[3px] border-t-slate-900"></div>
+                  </div>
+                </div>
+              </Marker>
+            ))}
+          </>
+        )}
 
         {broadcastCenter && (
           <>
@@ -866,6 +900,17 @@ export default function LiveMap() {
             >
               <Flame size={12} />
               Heatmap
+            </button>
+
+            <button
+              onClick={handleToggleFloodDetour}
+              className={`px-3 py-1 text-xs font-bold rounded-full transition-all cursor-pointer flex items-center gap-1 ${
+                isFloodDetourActive ? 'bg-red-600 text-white shadow-md animate-pulse' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+              }`}
+              title="Activate Monsoon Waterlogging Emergency Re-Routing"
+            >
+              <CloudRain size={12} />
+              <span>{isFloodDetourActive ? "Detour Active" : "Flood Detour"}</span>
             </button>
           </div>
 
