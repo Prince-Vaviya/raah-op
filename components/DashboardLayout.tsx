@@ -94,7 +94,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             >
               {/* Dynamic Sliding Vibrant Blue Active Pill */}
               <div
-                className="absolute top-1 bottom-1 bg-blue-600 rounded-full transition-all duration-300 ease-out shadow-[0_4px_14px_0_rgba(37,99,235,0.45)] border border-blue-400/30"
+                className="absolute top-1 bottom-1 bg-blue-100 rgba(37,99,235,0.45) border border-blue-200 rounded-full transition-all duration-300 ease-out"
                 style={{
                   left: `${indicatorStyle.left}px`,
                   width: `${indicatorStyle.width}px`,
@@ -112,7 +112,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     href={item.href}
                     className={`relative z-10 flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold transition-all whitespace-nowrap ${
                       isActive 
-                        ? 'text-white drop-shadow-xs' 
+                        ? 'text-slate-900 drop-shadow-xs' 
                         : 'text-slate-600 hover:text-slate-900 hover:bg-white/30'
                     }`}
                   >
@@ -152,8 +152,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       {/* Main Content Scroll Area - Passes under Floating Navbar */}
       <main className="flex-1 flex flex-col h-full overflow-hidden relative z-10">
-        <div className={`flex-1 relative ${pathname === '/livemap' ? 'overflow-hidden p-4 pt-28' : 'px-6 md:px-8 pb-8 pt-28 overflow-y-auto'}`}>
-          <div className={pathname === '/livemap' ? 'w-full h-full rounded-2xl overflow-hidden shadow-xs' : 'max-w-7xl mx-auto space-y-6'}>
+        <div className={`flex-1 relative ${(pathname === '/livemap' || pathname.startsWith('/routeinspector')) ? 'overflow-hidden p-4 pt-28' : 'px-6 md:px-8 pb-8 pt-28 overflow-y-auto'}`}>
+          <div className={(pathname === '/livemap' || pathname.startsWith('/routeinspector')) ? 'w-full h-full rounded-2xl overflow-hidden shadow-xs' : 'max-w-7xl mx-auto space-y-6'}>
             {children}
           </div>
         </div>
