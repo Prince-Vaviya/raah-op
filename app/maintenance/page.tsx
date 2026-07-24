@@ -7,8 +7,12 @@ export default function MaintenancePage() {
   const [logs, setLogs] = useState<any[]>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const fetchLogs = async () => {
+  const fetchLogs = async (force: boolean = false) => {
     try {
+      if (force) {
+        const { clearCache } = await import("../../lib/api");
+        clearCache('maintenance');
+      }
       const data = await fetchMaintenance();
       setLogs(data);
     } catch (e) {
@@ -18,26 +22,29 @@ export default function MaintenancePage() {
 
   useEffect(() => {
     fetchLogs();
-    const interval = setInterval(fetchLogs, 10000);
+    const interval = setInterval(() => fetchLogs(false), 10000);
     return () => clearInterval(interval);
   }, []);
 
   const handleManualRefresh = async () => {
     setIsRefreshing(true);
-    await fetchLogs();
+    await fetchLogs(true);
     setTimeout(() => setIsRefreshing(false), 500);
   };
 
   const markResolved = async (id: string) => {
+    // Optimistically update list state immediately
+    setLogs(prev => prev.map(log => log.id === id ? { ...log, status: 'RESOLVED' } : log));
     try {
       await fetch(`${API_URL}/maintenance/${id}/status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: 'RESOLVED' })
       });
-      fetchLogs();
+      await fetchLogs(true);
     } catch (e) {
       console.error(e);
+      await fetchLogs(true);
     }
   };
 
