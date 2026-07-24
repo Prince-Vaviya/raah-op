@@ -607,7 +607,7 @@ export default function RouteInspector() {
               onClick={() => setIsExpanded(!isExpanded)}
               className="mt-2 text-center text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline pt-2 border-t border-slate-100 dark:border-slate-800 cursor-pointer"
             >
-              {isExpanded ? "Show less" : `+ ${routes.length - 5} more routes v`}
+              {isExpanded ? "Show less" : `+ Show more`}
             </button>
           </div>
 
