@@ -2,50 +2,47 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Map as MapIcon, Route, Bell, Wrench, Users } from "lucide-react";
+import { 
+  Sun, 
+  Moon, 
+  SunMedium
+} from "lucide-react";
 import { useData } from "@/providers/DataProvider";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const { activities } = useData();
+  const { activities, metrics } = useData();
   const pathname = usePathname();
-  
+  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [currentTime, setCurrentTime] = useState("");
+  const [currentDate, setCurrentDate] = useState("");
+
   const navRef = useRef<HTMLDivElement>(null);
-  const [indicatorStyle, setIndicatorStyle] = useState({ left: 0, width: 0, opacity: 0 });
 
   const navItems = [
-    { href: '/', label: 'Overview', icon: LayoutDashboard, isExact: true },
-    { href: '/livemap', label: 'Live Map', icon: MapIcon },
-    { href: '/routeinspector', label: 'Route Inspector', icon: Route },
-    { href: '/maintenance', label: 'Maintenance', icon: Wrench },
-    { href: '/alerts', label: 'Alerts', icon: Bell, badge: activities?.length || 0 },
-    { href: '/conductors', label: 'Conductors', icon: Users },
+    { href: '/livemap', label: 'Overview', isExact: true },
+    { href: '/routeinspector', label: 'Routes' },
+    { href: '/alerts', label: 'Alerts', badge: activities?.length || 0 },
+    { href: '/insights', label: 'Insights' },
+    { href: '/maintenance', label: 'Reports' },
   ];
 
+  // Update clock every minute
   useEffect(() => {
-    const updateIndicator = () => {
-      if (!navRef.current) return;
-      const activeIndex = navItems.findIndex(item => 
-        item.isExact ? pathname === item.href : pathname.startsWith(item.href)
-      );
-
-      if (activeIndex !== -1) {
-        const activeLink = navRef.current.children[activeIndex + 1] as HTMLElement; // +1 to skip absolute indicator
-        if (activeLink) {
-          setIndicatorStyle({
-            left: activeLink.offsetLeft,
-            width: activeLink.offsetWidth,
-            opacity: 1
-          });
-        }
-      } else {
-        setIndicatorStyle(prev => ({ ...prev, opacity: 0 }));
-      }
+    const updateTime = () => {
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+      const dayName = now.toLocaleDateString('en-US', { weekday: 'short' });
+      const dayNum = now.getDate();
+      const monthName = now.toLocaleDateString('en-US', { month: 'short' });
+      
+      setCurrentTime(timeStr);
+      setCurrentDate(`${dayName}, ${dayNum} ${monthName}`);
     };
 
-    updateIndicator();
-    window.addEventListener('resize', updateIndicator);
-    return () => window.removeEventListener('resize', updateIndicator);
-  }, [pathname, activities]);
+    updateTime();
+    const interval = setInterval(updateTime, 10000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     if (pathname !== '/login') {
@@ -60,104 +57,114 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     return <>{children}</>;
   }
 
+  const toggleDarkMode = () => {
+    setIsDarkMode(!isDarkMode);
+    document.documentElement.classList.toggle('dark');
+  };
+
   return (
-    <div className="flex flex-col h-screen w-full bg-linear-to-br from-[#f8fafc] via-[#f1f5f9] to-[#e2e8f0] text-slate-800 font-sans overflow-hidden relative">
-      {/* Background Ambient Mesh Light Blur */}
-      <div className="absolute bottom-0 right-1/4 w-150 h-150 bg-indigo-400/10 rounded-full blur-[100px] pointer-events-none z-0"></div>
-
-      {/* Floating Liquid Glass Overlay Header with Top Blur Mask */}
-      <div className="absolute top-0 left-0 right-0 w-full shrink-0 z-40 pointer-events-none">
-        {/* Top Gap Blur Shield */}
-        <div className="h-6 w-full bg-slate-100/40 backdrop-blur-md"></div>
-
-        <div className="px-6">
-          {/* Main Liquid Glass Capsule Bar */}
-          <header className="h-21 bg-linear-to-r from-white/60 via-blue-50/40 to-white/60 backdrop-blur-2xl border border-white/90 rounded-4xl flex items-center justify-between px-6 shadow-[0_5px_50px_0_rgba(59,130,246,0.18),inset_0_2px_4px_0_rgba(255,255,255,0.9),inset_0_-2px_4px_0_rgba(255,255,255,0.4)] backdrop-saturate-200 relative overflow-hidden pointer-events-auto transition-all">
-            
-            {/* Top Light Reflective Specular Rim */}
-            <div className="absolute top-0 left-0 right-0 h-[1.5px] bg-linear-to-r from-transparent via-white to-transparent opacity-95"></div>
-
-            {/* Left: Brand Logo & Title */}
-            <div className="flex items-center gap-3 shrink-0 relative z-10">
-              <Link href="/" className="flex items-center gap-2.5 group">
-                <img src="/raah_logo.svg" alt="RAAH Logo" className="w-6 h-6 shrink-0 object-contain drop-shadow-xs" />
-                <span className="text-sm font-black tracking-tight text-slate-900 group-hover:text-blue-600 transition-colors">
-                  RAAH
-                </span>
-              </Link>
-            </div>
-
-            {/* Center: Navigation Bar with Liquid Sliding Pill */}
-            <div 
-              ref={navRef}
-              className="relative z-10 flex items-center gap-1.5 px-2 py-2 mx-auto"
-            >
-              {/* Dynamic Sliding Vibrant Blue Active Pill */}
-              <div
-                className="absolute top-1 bottom-1 bg-blue-100 rgba(37,99,235,0.45) border border-blue-200 rounded-full transition-all duration-300 ease-out"
-                style={{
-                  left: `${indicatorStyle.left}px`,
-                  width: `${indicatorStyle.width}px`,
-                  opacity: indicatorStyle.opacity
-                }}
+    <div className={`flex flex-col h-screen w-full font-sans overflow-hidden relative ${isDarkMode ? 'dark bg-slate-950 text-slate-100' : 'bg-slate-100/90 text-slate-800'}`}>
+      
+      {/* Floating Glassmorphic Header Capsule */}
+      <div className="absolute top-4 left-0 right-0 w-full z-50 pointer-events-none px-6 max-w-7xl mx-auto">
+        <header className="h-16 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl border border-white/80 dark:border-slate-800/80 rounded-full flex items-center justify-between px-5 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)] pointer-events-auto transition-all">
+          
+          {/* Left: Logo & Brand */}
+          <div className="flex items-center gap-3 shrink-0">
+            <Link href="/livemap" className="flex items-center gap-2.5 group">
+              <img 
+                src="/raah_logo.svg" 
+                alt="Raah Logo" 
+                className="w-7 h-7 object-contain drop-shadow-sm group-hover:scale-105 transition-transform" 
               />
+              <div className="flex flex-col justify-center leading-none">
+                <span className="text-lg font-black tracking-tight text-slate-900 dark:text-white font-sans">
+                  Raah
+                </span>
+                <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">
+                  Mumbai
+                </span>
+              </div>
+            </Link>
+          </div>
 
-              {navItems.map((item) => {
-                const Icon = item.icon;
-                const isActive = item.isExact ? pathname === item.href : pathname.startsWith(item.href);
+          {/* Center: Glass Nav Pills */}
+          <div 
+            ref={navRef}
+            className="flex items-center gap-1 bg-slate-100/60 dark:bg-slate-800/60 backdrop-blur-md p-1.5 rounded-full border border-white/40 dark:border-slate-700/50"
+          >
+            {navItems.map((item) => {
+              const isActive = item.isExact 
+                ? (pathname === item.href || pathname === '/') 
+                : pathname.startsWith(item.href);
 
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={`relative z-10 flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold transition-all whitespace-nowrap ${
-                      isActive 
-                        ? 'text-slate-900 drop-shadow-xs' 
-                        : 'text-slate-600 hover:text-slate-900 hover:bg-white/30'
-                    }`}
-                  >
-                    <Icon size={15} />
-                    <span>{item.label}</span>
-                    {item.badge !== undefined && item.badge > 0 && (
-                      <span className={`ml-0.5 text-[10px] px-1.5 py-0.2 rounded-full font-extrabold transition-all ${
-                        isActive 
-                          ? 'bg-red-500 text-white shadow-xs' 
-                          : 'bg-red-500 text-white shadow-xs'
-                      }`}>
-                        {item.badge}
-                      </span>
-                    )}
-                  </Link>
-                );
-              })}
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`relative flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
+                    isActive 
+                      ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-sm font-bold' 
+                      : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                >
+                  <span>{item.label}</span>
+                  {item.label === 'Alerts' && (item.badge ?? 0) > 0 && (
+                    <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+                  )}
+                </Link>
+              );
+            })}
+
+            {/* Dark Mode / Theme Circle Toggle */}
+            <button
+              onClick={toggleDarkMode}
+              className="w-8 h-8 rounded-full bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 flex items-center justify-center ml-1 shadow-sm hover:scale-105 transition-all cursor-pointer"
+              title="Toggle Theme"
+            >
+              {isDarkMode ? <Sun size={14} /> : <Moon size={14} className="fill-current" />}
+            </button>
+          </div>
+
+          {/* Right: Weather, Live Time & Profile Avatar */}
+          <div className="flex items-center gap-4 shrink-0">
+            {/* Weather Pill */}
+            <div className="hidden sm:flex items-center gap-1.5 text-xs font-medium text-slate-700 dark:text-slate-300 bg-white/40 dark:bg-slate-800/40 px-3 py-1.5 rounded-full border border-white/60 dark:border-slate-700/50 backdrop-blur-sm">
+              <SunMedium size={16} className="text-amber-500" />
+              <span className="font-bold text-slate-900 dark:text-white">{metrics.temperature || 29}°</span>
+              <span className="text-slate-500 dark:text-slate-400 text-[11px]">Haze</span>
             </div>
 
-            {/* Right: Operator Profile Capsule */}
-            <div className="flex items-center gap-2.5 shrink-0 relative z-10 pl-2">
-              <div className="relative">
-                <div className="w-8 h-8 rounded-full flex items-center justify-center overflow-hidden border border-white/90 shadow-xs ring-2 ring-blue-500/20">
-                  <img src="/avatar_operator.svg" alt="Profile" className="w-full h-full object-cover" />
-                </div>
-                <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 border-2 border-white rounded-full shadow-xs"></span>
-              </div>
-              <div className="hidden md:block">
-                <div className="font-bold text-xs text-slate-900 leading-tight">Arjun Singh</div>
-                <div className="text-[10px] font-semibold text-slate-500">Operator</div>
-              </div>
+            {/* Time & Date */}
+            <div className="hidden md:flex flex-col text-right leading-tight">
+              <span className="text-xs font-bold text-slate-900 dark:text-white font-mono tracking-tight">
+                {currentTime || "19:45"}
+              </span>
+              <span className="text-[10px] font-medium text-slate-500 dark:text-slate-400">
+                {currentDate || "Tue, 21 Jul"}
+              </span>
             </div>
 
-          </header>
-        </div>
+            {/* Profile Badge (AK) */}
+            <div className="w-8 h-8 rounded-full bg-[#0f172a] text-white flex items-center justify-center text-xs font-black tracking-wider shadow-sm ring-2 ring-white dark:ring-slate-800 cursor-pointer">
+              AK
+            </div>
+          </div>
+
+        </header>
       </div>
 
-      {/* Main Content Scroll Area - Passes under Floating Navbar */}
+      {/* Main Content Area */}
       <main className="flex-1 flex flex-col h-full overflow-hidden relative z-10">
-        <div className={`flex-1 relative ${(pathname === '/livemap' || pathname.startsWith('/routeinspector')) ? 'overflow-hidden p-4 pt-28' : 'px-6 md:px-8 pb-8 pt-28 overflow-y-auto'}`}>
-          <div className={(pathname === '/livemap' || pathname.startsWith('/routeinspector')) ? 'w-full h-full rounded-2xl overflow-hidden shadow-xs' : 'max-w-7xl mx-auto space-y-6'}>
-            {children}
-          </div>
+        <div className={`flex-1 relative ${
+          (pathname === '/livemap' || pathname === '/' || pathname.startsWith('/routeinspector')) 
+            ? 'overflow-hidden p-0' 
+            : 'px-6 md:px-8 pb-8 pt-24 overflow-y-auto'
+        }`}>
+          {children}
         </div>
       </main>
     </div>
   );
 }
+
