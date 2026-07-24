@@ -1037,7 +1037,7 @@ export default function RouteInspector() {
                       { id: `${selectedRouteMeta.id}-C`, speed: '28 km/h', load: '45% Full', status: 'On Time', location: 'Dadar TT', color: 'text-emerald-600' },
                       { id: `${selectedRouteMeta.id}-D`, speed: '12 km/h', load: '92% Full', status: '1 min delay', location: 'Bandra Reclamation', color: 'text-amber-600' },
                       { id: `${selectedRouteMeta.id}-E`, speed: '22 km/h', load: '50% Full', status: 'On Time', location: 'Sion Circle', color: 'text-emerald-600' },
-                    ]).map((bus) => (
+                    ]).map((bus: any) => (
                       <div key={bus.id} className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
                         <div>
                           <div className="font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
@@ -1077,7 +1077,7 @@ export default function RouteInspector() {
                       { order: 4, name: "Crawford Market", waiting: "35 waiting", transfer: "Route 500" },
                       { order: 5, name: "Dadar TT", waiting: "42 waiting", transfer: "Western Line" },
                       { order: 6, name: "Bandra Reclamation", waiting: "18 waiting", transfer: "Terminus" }
-                    ]).map((stop) => (
+                    ]).map((stop: any) => (
                       <div key={`${stop.order}-${stop.name}`} className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
                         <div className="flex items-center gap-2.5">
                           <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 font-bold text-[10px] flex items-center justify-center shrink-0">

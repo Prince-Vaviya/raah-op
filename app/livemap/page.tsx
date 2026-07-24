@@ -281,8 +281,8 @@ export default function LiveMap() {
 
     const fetchLiveMapData = async () => {
       try {
-        const token = localStorage.getItem('token') || '';
-        const data = await fetchLiveTelemetryGeoJSON();
+        const token = typeof window !== 'undefined' ? localStorage.getItem('token') || '' : '';
+        const data = await fetchLiveTelemetryGeoJSON().catch(() => null);
         if (data && data.features) {
           setBuses(data.features.map((f: any) => ({
             trip_id: f.properties.trip_id,
@@ -296,21 +296,21 @@ export default function LiveMap() {
 
         const incidentsRes = await fetch(`${API_URL}/incidents`, {
           headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (incidentsRes.ok) {
-          const incData = await incidentsRes.json();
-          setIncidents(incData);
+        }).catch(() => null);
+        if (incidentsRes && incidentsRes.ok) {
+          const incData = await incidentsRes.json().catch(() => null);
+          if (incData) setIncidents(incData);
         }
 
         const heatmapRes = await fetch(`${API_URL}/routes/stops/heatmap`, {
           headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (heatmapRes.ok) {
-          const hmData = await heatmapRes.json();
-          setStopVolumes(hmData);
+        }).catch(() => null);
+        if (heatmapRes && heatmapRes.ok) {
+          const hmData = await heatmapRes.json().catch(() => null);
+          if (hmData) setStopVolumes(hmData);
         }
       } catch (e) {
-        console.error("Failed to fetch buses/incidents/heatmap", e);
+        // Silently catch network drops
       }
     };
     fetchLiveMapData();
@@ -624,7 +624,7 @@ export default function LiveMap() {
 
         {/* Bunching Hotspot Heatmap Layer */}
         {activeFilters.heatmap && (
-          <Source id="bunching-heatmap" type="geojson" data={bunchingHeatmapData}>
+          <Source id="bunching-heatmap" type="geojson" data={bunchingHeatmapData as any}>
             <Layer
               id="bunching-heatmap-layer"
               type="heatmap"
