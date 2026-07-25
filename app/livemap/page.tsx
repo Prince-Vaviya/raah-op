@@ -407,27 +407,35 @@ export default function LiveMap() {
     if (!selectedTripId) return;
     try {
       const token = localStorage.getItem('token') || '';
-      await fetch(`${API_URL}/commands`, {
+
+      // Find the bus details for the reason message
+      const bus = buses.find(b => b.trip_id === selectedTripId);
+      const busLabel = bus ? `${bus.bus_number || 'Bus'} on Route ${bus.route_name || '?'}` : selectedTripId.slice(0, 8);
+
+      // Send to ALL active buses so every conductor sees it
+      const res = await fetch(`${API_URL}/commands/broadcast`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
-          trip_id: selectedTripId,
           type: type,
-          duration_sec: 300,
-          reason: "Operator initiated from Live Map"
+          duration_sec: type === 'HOLD' ? 300 : 0,
+          reason: `${type} — dispatched from ${busLabel}`
         })
       });
-      alert(`Command ${type} sent! Resolved.`);
-      
+
+      const data = await res.json().catch(() => null);
+      const count = data?.count || 0;
+      alert(`Command ${type} sent to ${count} active buses!`);
+
       setResolvedBuses(prev => {
         const next = new Set(prev);
         next.add(selectedTripId);
         return next;
       });
-      
+
       setSelectedTripId(null);
     } catch (e) {
       console.error("Failed to send command", e);
@@ -443,6 +451,8 @@ export default function LiveMap() {
     if (!broadcastCenter || !broadcastMessage.trim()) return;
     try {
       const token = localStorage.getItem('token') || '';
+
+      // 1. Create the zone-based broadcast
       await fetch(`${API_URL}/broadcasts`, {
         method: 'POST',
         headers: {
@@ -456,7 +466,22 @@ export default function LiveMap() {
           radiusMeters: 2000
         })
       });
-      alert(`Broadcast sent to zone!`);
+
+      // 2. Also send a HOLD command to ALL active buses so conductors see it on their commands screen
+      await fetch(`${API_URL}/commands/broadcast`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          type: 'HOLD',
+          duration_sec: 0,
+          reason: `Zone Broadcast: ${broadcastMessage}`
+        })
+      });
+
+      alert(`Broadcast sent to zone! Command dispatched to all active buses.`);
       setBroadcastMode(false);
       setBroadcastCenter(null);
       setBroadcastMessage("");

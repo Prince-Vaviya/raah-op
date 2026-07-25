@@ -42,7 +42,27 @@ export default function ConductorsPage() {
         body: JSON.stringify({ status: 'VERIFIED', busNumber })
       });
       if (res.ok) {
-        alert('Conductor approved and assigned to ' + busNumber);
+        // Now broadcast a command to all active buses so every conductor sees it
+        try {
+          const conductor = conductors.find(c => c.id === id);
+          const broadcastRes = await fetch(`${API_URL}/commands/broadcast`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              type: 'HOLD',
+              duration_sec: 0,
+              reason: `Conductor ${conductor?.name || licenseNumber} approved & assigned to bus ${busNumber}`
+            })
+          });
+          if (broadcastRes.ok) {
+            const broadcastData = await broadcastRes.json();
+            alert(`Conductor approved! Command sent to ${broadcastData.count} active buses.`);
+          } else {
+            alert('Conductor approved and assigned to ' + busNumber);
+          }
+        } catch {
+          alert('Conductor approved and assigned to ' + busNumber);
+        }
         loadConductors();
       }
     } catch (e) {
