@@ -183,3 +183,18 @@ export async function fetchConductors() {
   setCache('conductors', data, TTL.conductors);
   return data;
 }
+
+export async function fetchStopHeatmap() {
+  const cached = getCached<any[]>('stopHeatmap');
+  if (cached) return cached;
+
+  try {
+    const res = await fetch(`${API_URL}/routes/stops/heatmap`);
+    if (!res.ok) return [];
+    const data = await res.json();
+    setCache('stopHeatmap', data, 60_000);
+    return data;
+  } catch (err) {
+    return [];
+  }
+}

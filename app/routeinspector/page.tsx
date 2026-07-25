@@ -334,6 +334,34 @@ export default function RouteInspector() {
     return filtered;
   }, [liveBuses, selectedRouteMeta, routePolyline]);
 
+  const heatmapGeoJSON = React.useMemo(() => {
+    const features: any[] = [
+      { type: "Feature", geometry: { type: "Point", coordinates: [72.8430, 19.0180] }, properties: { weight: 0.98 } },
+      { type: "Feature", geometry: { type: "Point", coordinates: [72.8640, 19.0400] }, properties: { weight: 0.92 } },
+      { type: "Feature", geometry: { type: "Point", coordinates: [72.8600, 19.0350] }, properties: { weight: 0.88 } },
+      { type: "Feature", geometry: { type: "Point", coordinates: [72.8180, 19.0020] }, properties: { weight: 0.85 } },
+      { type: "Feature", geometry: { type: "Point", coordinates: [72.8310, 18.9240] }, properties: { weight: 0.78 } },
+      { type: "Feature", geometry: { type: "Point", coordinates: [72.9260, 19.1090] }, properties: { weight: 0.90 } },
+    ];
+
+    if (routeBuses && routeBuses.length > 0) {
+      routeBuses.forEach((b: any) => {
+        if (b.geometry?.coordinates) {
+          features.push({
+            type: "Feature",
+            geometry: { type: "Point", coordinates: b.geometry.coordinates },
+            properties: { weight: 0.90 }
+          });
+        }
+      });
+    }
+
+    return {
+      type: "FeatureCollection",
+      features
+    };
+  }, [routeBuses]);
+
   const handleApprove = async () => {
     setIsApproved(true);
     try {
@@ -395,51 +423,99 @@ export default function RouteInspector() {
             <div className="bg-amber-500 text-white font-extrabold text-[11px] px-2.5 py-0.5 rounded-md shadow-md">500</div>
           </Marker>
 
-          {/* Selected Route Live Telemetry Buses */}
-          {routeBuses.length > 0 ? (
-            routeBuses.map((bus: any, idx: number) => {
-              const [lng, lat] = bus.geometry.coordinates;
-              const routeName = bus.properties?.route_name || '101';
-              const color = getRouteColor(routeName);
-              const isAlert = bus.properties?.forward_headway < 150;
-              const isDelayed = bus.properties?.forward_headway >= 150 && bus.properties?.forward_headway < 300;
-
-              return (
-                <Marker key={`bus-${idx}`} longitude={lng} latitude={lat} anchor="center">
-                  <div className="relative group cursor-pointer transition-transform hover:scale-110">
-                    <TopDownBusSvg color={color} />
-
-                    {isAlert && (
-                      <div className="absolute -top-2 -right-2 bg-red-600 text-white p-1 rounded-full shadow-md z-20 border border-white animate-bounce">
-                        <AlertTriangle size={11} />
-                      </div>
-                    )}
-
-                    {isDelayed && (
-                      <div className="absolute -top-2 -right-2 bg-amber-400 text-slate-950 p-1 rounded-full shadow-md z-20 border border-white">
-                        <Clock size={11} />
-                      </div>
-                    )}
-                  </div>
-                </Marker>
-              );
-            })
-          ) : (
+          {/* Heatmap Layer when Heatmap tab is active */}
+          {mapMode === 'heatmap' && (
             <>
+              <Source id="inspector-bunching-heatmap" type="geojson" data={heatmapGeoJSON}>
+                <Layer
+                  id="inspector-heatmap-layer"
+                  type="heatmap"
+                  paint={{
+                    'heatmap-weight': ['get', 'weight'],
+                    'heatmap-intensity': 2.2,
+                    'heatmap-color': [
+                      'interpolate',
+                      ['linear'],
+                      ['heatmap-density'],
+                      0, 'rgba(33,102,172,0)',
+                      0.2, 'rgb(103,169,207)',
+                      0.4, 'rgb(209,229,240)',
+                      0.6, 'rgb(253,219,199)',
+                      0.8, 'rgb(239,138,98)',
+                      1, 'rgb(178,24,43)'
+                    ],
+                    'heatmap-radius': 40,
+                    'heatmap-opacity': 0.85
+                  }}
+                />
+              </Source>
+
+              {/* Heatmap Hotspot Badges */}
               <Marker longitude={72.8430} latitude={19.0180} anchor="center">
-                <div className="relative group cursor-pointer transition-transform hover:scale-110">
-                  <TopDownBusSvg color="#3b82f6" />
+                <div className="bg-red-600 text-white font-extrabold text-[10px] px-2 py-0.5 rounded-full shadow-lg border border-white flex items-center gap-1 animate-pulse">
+                  <span>64 waiting</span> <span>👻</span>
                 </div>
               </Marker>
               <Marker longitude={72.8640} latitude={19.0400} anchor="center">
-                <div className="relative group cursor-pointer transition-transform hover:scale-110">
-                  <TopDownBusSvg color="#f59e0b" />
-                  <div className="absolute -top-2 -right-2 bg-amber-400 text-slate-950 p-1 rounded-full shadow-md z-20 border border-white">
-                    <Clock size={11} />
-                  </div>
+                <div className="bg-amber-600 text-white font-extrabold text-[10px] px-2 py-0.5 rounded-full shadow-lg border border-white flex items-center gap-1">
+                  <span>58 waiting</span> <span>👻</span>
+                </div>
+              </Marker>
+              <Marker longitude={72.8600} latitude={19.0350} anchor="center">
+                <div className="bg-red-600 text-white font-extrabold text-[10px] px-2 py-0.5 rounded-full shadow-lg border border-white flex items-center gap-1">
+                  <span>48 waiting</span> <span>👻</span>
                 </div>
               </Marker>
             </>
+          )}
+
+          {/* Selected Route Live Telemetry Buses (Live View Mode) */}
+          {mapMode === 'live' && (
+            routeBuses.length > 0 ? (
+              routeBuses.map((bus: any, idx: number) => {
+                const [lng, lat] = bus.geometry.coordinates;
+                const routeName = bus.properties?.route_name || '101';
+                const color = getRouteColor(routeName);
+                const isAlert = bus.properties?.forward_headway < 150;
+                const isDelayed = bus.properties?.forward_headway >= 150 && bus.properties?.forward_headway < 300;
+
+                return (
+                  <Marker key={`bus-${idx}`} longitude={lng} latitude={lat} anchor="center">
+                    <div className="relative group cursor-pointer transition-transform hover:scale-110">
+                      <TopDownBusSvg color={color} />
+
+                      {isAlert && (
+                        <div className="absolute -top-2 -right-2 bg-red-600 text-white p-1 rounded-full shadow-md z-20 border border-white animate-bounce">
+                          <AlertTriangle size={11} />
+                        </div>
+                      )}
+
+                      {isDelayed && (
+                        <div className="absolute -top-2 -right-2 bg-amber-400 text-slate-950 p-1 rounded-full shadow-md z-20 border border-white">
+                          <Clock size={11} />
+                        </div>
+                      )}
+                    </div>
+                  </Marker>
+                );
+              })
+            ) : (
+              <>
+                <Marker longitude={72.8430} latitude={19.0180} anchor="center">
+                  <div className="relative group cursor-pointer transition-transform hover:scale-110">
+                    <TopDownBusSvg color="#3b82f6" />
+                  </div>
+                </Marker>
+                <Marker longitude={72.8640} latitude={19.0400} anchor="center">
+                  <div className="relative group cursor-pointer transition-transform hover:scale-110">
+                    <TopDownBusSvg color="#f59e0b" />
+                    <div className="absolute -top-2 -right-2 bg-amber-400 text-slate-950 p-1 rounded-full shadow-md z-20 border border-white">
+                      <Clock size={11} />
+                    </div>
+                  </div>
+                </Marker>
+              </>
+            )
           )}
         </Map>
       </div>
