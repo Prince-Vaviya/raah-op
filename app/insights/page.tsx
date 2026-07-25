@@ -115,21 +115,22 @@ export default function InsightsPage() {
       ];
 
   // Dynamic Routes Needing Attention from Backend
-  const routesNeedingAttention = routeHealth && routeHealth.length > 0
-    ? routeHealth.filter(r => r.score < 80).slice(0, 3).map((r, idx) => ({
-        badge: r.name || (idx === 0 ? "210" : idx === 1 ? "102" : "138"),
-        badgeBg: r.score < 50 ? "bg-red-600" : "bg-amber-500",
-        title: idx === 0 ? "Borivali (W) → Bandra (W)" : idx === 1 ? "Mantralaya → Kurla" : "Ghatkopar → Andheri (E)",
-        subtitle: r.score < 50 ? "High bunching risk" : idx === 1 ? "Delays increasing" : "Irregular headways",
-        riskLevel: r.score < 50 ? "High" : "Medium",
-        riskBg: r.score < 50 ? "bg-red-100 text-red-600" : "bg-amber-100 text-amber-700",
-        incidents: `${Math.max(3, Math.round((100 - r.score) / 10))} incidents`
-      }))
-    : [
-        { badge: "210", badgeBg: "bg-red-600", title: "Borivali (W) → Bandra (W)", subtitle: "High bunching risk", riskLevel: "High", riskBg: "bg-red-100 text-red-600", incidents: "6 incidents" },
-        { badge: "102", badgeBg: "bg-amber-500", title: "Mantralaya → Kurla", subtitle: "Delays increasing", riskLevel: "Medium", riskBg: "bg-amber-100 text-amber-700", incidents: "4 incidents" },
-        { badge: "138", badgeBg: "bg-purple-600", title: "Ghatkopar → Andheri (E)", subtitle: "Irregular headways", riskLevel: "Medium", riskBg: "bg-amber-100 text-amber-700", incidents: "3 incidents" },
-      ];
+  const filteredHealth = routeHealth && routeHealth.length > 0 ? routeHealth.filter(r => r.score < 85) : [];
+  const routesNeedingAttention = (filteredHealth.length > 0 ? filteredHealth : (routeHealth && routeHealth.length > 0 ? routeHealth : [])).slice(0, 3).map((r: any, idx: number) => ({
+    badge: r.routeName || r.name || (idx === 0 ? "210" : idx === 1 ? "102" : "138"),
+    badgeBg: (r.score || 70) < 50 ? "bg-red-600" : (r.score || 70) < 80 ? "bg-amber-500" : "bg-purple-600",
+    title: r.startStop && r.endStop ? `${r.startStop} → ${r.endStop}` : (idx === 0 ? "Borivali (W) → Bandra (W)" : idx === 1 ? "Mantralaya → Kurla" : "Ghatkopar → Andheri (E)"),
+    subtitle: (r.score || 70) < 50 ? "High bunching risk" : (r.score || 70) < 80 ? "Delays increasing" : "Irregular headways",
+    riskLevel: (r.score || 70) < 50 ? "High" : "Medium",
+    riskBg: (r.score || 70) < 50 ? "bg-red-100 text-red-600" : "bg-amber-100 text-amber-700",
+    incidents: `${Math.max(2, Math.round((100 - (r.score || 70)) / 8))} incidents`
+  }));
+
+  const finalRoutesNeedingAttention = routesNeedingAttention.length > 0 ? routesNeedingAttention : [
+    { badge: "210", badgeBg: "bg-red-600", title: "Borivali (W) → Bandra (W)", subtitle: "High bunching risk", riskLevel: "High", riskBg: "bg-red-100 text-red-600", incidents: "6 incidents" },
+    { badge: "102", badgeBg: "bg-amber-500", title: "Mantralaya → Kurla", subtitle: "Delays increasing", riskLevel: "Medium", riskBg: "bg-amber-100 text-amber-700", incidents: "4 incidents" },
+    { badge: "138", badgeBg: "bg-purple-600", title: "Ghatkopar → Andheri (E)", subtitle: "Irregular headways", riskLevel: "Medium", riskBg: "bg-amber-100 text-amber-700", incidents: "3 incidents" },
+  ];
 
   return (
     <div className="min-h-screen bg-slate-50/50 dark:bg-slate-950 p-6 md:p-8 font-sans text-slate-800 dark:text-slate-100 max-w-7xl mx-auto space-y-6 pb-16">
@@ -523,7 +524,7 @@ export default function InsightsPage() {
           </div>
 
           <div className="space-y-2.5 flex-1 flex flex-col justify-around">
-            {routesNeedingAttention.map((routeItem) => (
+            {finalRoutesNeedingAttention.map((routeItem) => (
               <div 
                 key={routeItem.badge}
                 className="flex items-center justify-between p-2.5 rounded-2xl bg-slate-50/60 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 cursor-pointer hover:bg-white transition-all"

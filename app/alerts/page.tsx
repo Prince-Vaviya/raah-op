@@ -15,12 +15,14 @@ import {
   Info,
   Send,
   Eye,
-  RotateCcw
+  RotateCcw,
+  Search
 } from "lucide-react";
 
 export default function Alerts() {
   const { activities, setActivities, dismissAlert, refreshAlerts } = useData();
   const [filter, setFilter] = useState<'all' | 'error' | 'warning' | 'resolved'>('all');
+  const [searchQuery, setSearchQuery] = useState('');
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [history, setHistory] = useState<{alert: any, action: 'approved' | 'rejected', timestamp: string}[]>([]);
 
@@ -88,11 +90,30 @@ export default function Alerts() {
   const warningCount = activities.filter(a => a.type === 'warning').length;
   const resolvedCount = history.length;
 
-  const filteredActivities = filter === 'all'
+  const baseFiltered = filter === 'all'
     ? activities
     : filter === 'resolved'
       ? []
       : activities.filter(a => a.type === filter);
+
+  const filteredActivities = baseFiltered.filter((a) => {
+    if (!searchQuery.trim()) return true;
+    const query = searchQuery.toLowerCase();
+    const title = (a.title || '').toLowerCase();
+    const desc = (a.description || '').toLowerCase();
+    const summary = (a.aiSummary || '').toLowerCase();
+    const type = (a.type || '').toLowerCase();
+    return title.includes(query) || desc.includes(query) || summary.includes(query) || type.includes(query);
+  });
+
+  const filteredHistory = history.filter((item) => {
+    if (!searchQuery.trim()) return true;
+    const query = searchQuery.toLowerCase();
+    const title = (item.alert?.title || '').toLowerCase();
+    const desc = (item.alert?.description || '').toLowerCase();
+    const action = (item.action || '').toLowerCase();
+    return title.includes(query) || desc.includes(query) || action.includes(query);
+  });
 
   // Helper styling for card variants
   const getCardVariant = (type: string) => {
@@ -137,78 +158,102 @@ export default function Alerts() {
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-12 font-sans text-slate-800">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900"></h1>
+          <h1 className="text-2xl font-black text-slate-900 dark:text-white">Active Alerts</h1>
+          <p className="text-xs text-slate-500 font-medium mt-0.5">Real-time bus bunching, traffic delay warnings, and AI holding suggestions</p>
         </div>
         <button
           onClick={handleRefresh}
           disabled={isRefreshing}
-          className="flex items-center cursor-pointer gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 shadow-sm transition-colors text-sm font-medium disabled:opacity-50"
+          className="flex items-center cursor-pointer gap-2 px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 shadow-sm transition-colors text-sm font-bold disabled:opacity-50"
         >
           <RefreshCw size={14} className={isRefreshing ? 'animate-spin' : ''} />
           {isRefreshing ? 'Refreshing...' : 'Refresh'}
         </button>
       </div>
 
-      {/* Filter Tabs with Sliding Background Indicator */}
-      <div className="relative inline-flex items-center bg-slate-100/90 p-1.5 rounded-xl border border-slate-200/80 shadow-xs max-w-fit">
-        {/* Sliding Active Pill Indicator */}
-        <div
-          className="absolute top-1.5 bottom-1.5 bg-blue-600 rounded-lg transition-all duration-300 ease-out shadow-xs"
-          style={{
-            left: filter === 'all' ? '6px' : filter === 'error' ? 'calc(25% + 1.5px)' : filter === 'warning' ? 'calc(50% + 1.5px)' : 'calc(75% + 1.5px)',
-            width: 'calc(25% - 3px)'
-          }}
-        />
+      {/* Filter Tabs & Search Bar Container */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        {/* Filter Tabs with Sliding Background Indicator */}
+        <div className="relative inline-flex items-center bg-slate-100/90 dark:bg-slate-800/90 p-1.5 rounded-xl border border-slate-200/80 dark:border-slate-700/80 shadow-xs max-w-fit">
+          {/* Sliding Active Pill Indicator */}
+          <div
+            className="absolute top-1.5 bottom-1.5 bg-blue-600 rounded-lg transition-all duration-300 ease-out shadow-xs"
+            style={{
+              left: filter === 'all' ? '6px' : filter === 'error' ? 'calc(25% + 1.5px)' : filter === 'warning' ? 'calc(50% + 1.5px)' : 'calc(75% + 1.5px)',
+              width: 'calc(25% - 3px)'
+            }}
+          />
 
-        <button
-          onClick={() => setFilter('all')}
-          className={`relative z-10 min-w-[110px] flex items-center justify-center gap-2 px-3.5 py-1.5 text-xs font-bold rounded-lg transition-colors cursor-pointer ${
-            filter === 'all' ? 'text-white' : 'text-slate-600 hover:text-slate-900'
-          }`}
-        >
-          <span>All alerts</span>
-          <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-extrabold ${filter === 'all' ? 'bg-red-500 text-white' : 'bg-red-500 text-white'}`}>
-            {activities.length}
-          </span>
-        </button>
+          <button
+            onClick={() => setFilter('all')}
+            className={`relative z-10 min-w-[110px] flex items-center justify-center gap-2 px-3.5 py-1.5 text-xs font-bold rounded-lg transition-colors cursor-pointer ${
+              filter === 'all' ? 'text-white' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900'
+            }`}
+          >
+            <span>All alerts</span>
+            <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-extrabold ${filter === 'all' ? 'bg-red-500 text-white' : 'bg-red-500 text-white'}`}>
+              {activities.length}
+            </span>
+          </button>
 
-        <button
-          onClick={() => setFilter('error')}
-          className={`relative z-10 min-w-[110px] flex items-center justify-center gap-2 px-3.5 py-1.5 text-xs font-bold rounded-lg transition-colors cursor-pointer ${
-            filter === 'error' ? 'text-white' : 'text-slate-600 hover:text-slate-900'
-          }`}
-        >
-          <span>Critical</span>
-          <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-extrabold ${filter === 'error' ? 'bg-red-500 text-white' : 'bg-red-500 text-white'}`}>
-            {criticalCount}
-          </span>
-        </button>
+          <button
+            onClick={() => setFilter('error')}
+            className={`relative z-10 min-w-[110px] flex items-center justify-center gap-2 px-3.5 py-1.5 text-xs font-bold rounded-lg transition-colors cursor-pointer ${
+              filter === 'error' ? 'text-white' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900'
+            }`}
+          >
+            <span>Critical</span>
+            <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-extrabold ${filter === 'error' ? 'bg-red-500 text-white' : 'bg-red-500 text-white'}`}>
+              {criticalCount}
+            </span>
+          </button>
 
-        <button
-          onClick={() => setFilter('warning')}
-          className={`relative z-10 min-w-[110px] flex items-center justify-center gap-2 px-3.5 py-1.5 text-xs font-bold rounded-lg transition-colors cursor-pointer ${
-            filter === 'warning' ? 'text-white' : 'text-slate-600 hover:text-slate-900'
-          }`}
-        >
-          <span>Warning</span>
-          <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-extrabold ${filter === 'warning' ? 'bg-amber-500 text-white' : 'bg-amber-500 text-white'}`}>
-            {warningCount}
-          </span>
-        </button>
+          <button
+            onClick={() => setFilter('warning')}
+            className={`relative z-10 min-w-[110px] flex items-center justify-center gap-2 px-3.5 py-1.5 text-xs font-bold rounded-lg transition-colors cursor-pointer ${
+              filter === 'warning' ? 'text-white' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900'
+            }`}
+          >
+            <span>Warning</span>
+            <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-extrabold ${filter === 'warning' ? 'bg-amber-500 text-white' : 'bg-amber-500 text-white'}`}>
+              {warningCount}
+            </span>
+          </button>
 
-        <button
-          onClick={() => setFilter('resolved')}
-          className={`relative z-10 min-w-[110px] flex items-center justify-center gap-2 px-3.5 py-1.5 text-xs font-bold rounded-lg transition-colors cursor-pointer ${
-            filter === 'resolved' ? 'text-white' : 'text-slate-600 hover:text-slate-900'
-          }`}
-        >
-          <span>Resolved</span>
-          <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-extrabold ${filter === 'resolved' ? 'bg-white/20 text-white' : 'bg-slate-400 text-white'}`}>
-            {resolvedCount}
-          </span>
-        </button>
+          <button
+            onClick={() => setFilter('resolved')}
+            className={`relative z-10 min-w-[110px] flex items-center justify-center gap-2 px-3.5 py-1.5 text-xs font-bold rounded-lg transition-colors cursor-pointer ${
+              filter === 'resolved' ? 'text-white' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900'
+            }`}
+          >
+            <span>Resolved</span>
+            <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-extrabold ${filter === 'resolved' ? 'bg-white/20 text-white' : 'bg-slate-400 text-white'}`}>
+              {resolvedCount}
+            </span>
+          </button>
+        </div>
+
+        {/* Search Bar */}
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+          <input
+            type="text"
+            placeholder="Search alerts by route, title, or recommendation..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-10 pr-9 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs font-medium text-slate-900 dark:text-white placeholder:text-slate-400 shadow-xs"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-white"
+            >
+              <X size={14} />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Alerts List */}
@@ -224,21 +269,21 @@ export default function Alerts() {
             </div>
           ))
         ) : filter === 'resolved' ? (
-          history.length === 0 ? (
-            <div className="text-center py-12 text-slate-500 bg-white rounded-xl border border-slate-200 shadow-sm">
-              No resolved alerts today.
+          filteredHistory.length === 0 ? (
+            <div className="text-center py-12 text-slate-500 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+              {searchQuery ? 'No resolved alerts match your search query.' : 'No resolved alerts today.'}
             </div>
           ) : (
             <div className="space-y-3">
-              {history.map((item, index) => (
-                <div key={index} className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 flex items-center justify-between">
+              {filteredHistory.map((item, index) => (
+                <div key={index} className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm p-4 flex items-center justify-between">
                   <div className="flex items-center gap-4">
                     <div className={`w-10 h-10 rounded-full shrink-0 flex items-center justify-center ${item.action === 'approved' ? 'bg-emerald-50 text-emerald-500' : 'bg-red-50 text-red-500'}`}>
                       {item.action === 'approved' ? <Check size={20} /> : <X size={20} />}
                     </div>
                     <div>
-                      <h4 className="font-semibold text-slate-800 text-sm">{item.alert.title}</h4>
-                      <p className="text-xs text-slate-500">{item.alert.time} {item.alert.description ? `· ${item.alert.description}` : ''}</p>
+                      <h4 className="font-semibold text-slate-800 dark:text-slate-100 text-sm">{item.alert.title}</h4>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">{item.alert.time} {item.alert.description ? `· ${item.alert.description}` : ''}</p>
                     </div>
                   </div>
                   <div className="text-right">

@@ -357,7 +357,7 @@ export default function RouteInspector() {
     }
 
     return {
-      type: "FeatureCollection",
+      type: "FeatureCollection" as const,
       features
     };
   }, [routeBuses]);

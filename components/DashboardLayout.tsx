@@ -5,7 +5,12 @@ import { usePathname } from "next/navigation";
 import { 
   Sun, 
   Moon, 
-  SunMedium
+  SunMedium,
+  ChevronDown,
+  UserCheck,
+  Building2,
+  Wrench,
+  Users
 } from "lucide-react";
 import { useData } from "@/providers/DataProvider";
 
@@ -15,8 +20,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [currentTime, setCurrentTime] = useState("");
   const [currentDate, setCurrentDate] = useState("");
+  const [isOpsOpen, setIsOpsOpen] = useState(false);
 
   const navRef = useRef<HTMLDivElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const navItems = [
     { href: '/livemap', label: 'Overview', isExact: true },
@@ -24,10 +31,32 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     { href: '/alerts', label: 'Alerts', badge: activities?.length || 0 },
     { href: '/insights', label: 'Insights' },
     { href: '/reports', label: 'Reports' },
-    { href: '/contractors', label: 'Contractors' },
-    { href: '/depots', label: 'Depots' },
-    { href: '/maintenance', label: 'Maintenance' },
   ];
+
+  const opsItems = [
+    { href: '/conductors', label: 'Conductors', icon: UserCheck },
+    { href: '/contractors', label: 'Contractors', icon: Users },
+    { href: '/depots', label: 'Depots', icon: Building2 },
+    { href: '/maintenance', label: 'Maintenance', icon: Wrench },
+  ];
+
+  const isOpsActive = opsItems.some(item => pathname.startsWith(item.href));
+
+  // Close dropdown on click outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setIsOpsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Close dropdown on route change
+  useEffect(() => {
+    setIsOpsOpen(false);
+  }, [pathname]);
 
   // Update clock every minute
   useEffect(() => {
@@ -119,6 +148,50 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               );
             })}
 
+            {/* Operations Dropdown Pill */}
+            <div className="relative" ref={dropdownRef}>
+              <button
+                onClick={() => setIsOpsOpen(!isOpsOpen)}
+                onMouseEnter={() => setIsOpsOpen(true)}
+                className={`relative flex items-center gap-1 px-4 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
+                  isOpsActive || isOpsOpen
+                    ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-sm font-bold'
+                    : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                <span>Operations</span>
+                <ChevronDown size={14} className={`transition-transform duration-200 ${isOpsOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              {/* Dropdown Menu */}
+              {isOpsOpen && (
+                <div 
+                  onMouseLeave={() => setIsOpsOpen(false)}
+                  className="absolute top-full left-0 mt-2 w-48 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border border-white/90 dark:border-slate-800/90 rounded-2xl p-1.5 shadow-xl z-50 animate-in fade-in slide-in-from-top-2"
+                >
+                  {opsItems.map((subItem) => {
+                    const IconComponent = subItem.icon;
+                    const isSubActive = pathname.startsWith(subItem.href);
+
+                    return (
+                      <Link
+                        key={subItem.href}
+                        href={subItem.href}
+                        className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                          isSubActive
+                            ? 'bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400'
+                            : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100/70 dark:hover:bg-slate-800/70'
+                        }`}
+                      >
+                        <IconComponent size={14} className={isSubActive ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400'} />
+                        <span>{subItem.label}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
             {/* Dark Mode / Theme Circle Toggle */}
             <button
               onClick={toggleDarkMode}
@@ -170,4 +243,3 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     </div>
   );
 }
-
