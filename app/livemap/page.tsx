@@ -224,6 +224,7 @@ export default function LiveMap() {
     heatmap: false // Default OFF as requested
   });
 
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
 
   useEffect(() => {
@@ -959,12 +960,45 @@ export default function LiveMap() {
         </div>
       )}
 
+      {/* 2D / 3D Perspective Mode Pill Switcher (Center Top under Navbar) */}
+      <div className="absolute top-24 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl p-1 rounded-full border border-white/90 dark:border-slate-800/90 shadow-xl pointer-events-auto">
+        <button
+          onClick={() => handleToggleDimension('2D')}
+          className={`px-3 py-1 text-xs font-extrabold rounded-full transition-all cursor-pointer ${
+            mapDimension === '2D' ? 'bg-slate-950 text-white shadow-md' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+          }`}
+        >
+          2D
+        </button>
+        <button
+          onClick={() => handleToggleDimension('3D')}
+          className={`px-3 py-1 text-xs font-extrabold rounded-full transition-all cursor-pointer flex items-center gap-1.5 ${
+            mapDimension === '3D' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+          }`}
+        >
+          <Box size={12} />
+          <span>3D</span>
+        </button>
+      </div>
+
       {/* LEFT SIDEBAR OVERLAY: Filter Toolbar Capsule & Stack of Figma Cards */}
       <div className="absolute top-24 left-8 z-30 w-80 space-y-3 pointer-events-auto">
         
-        {/* FILTER TOOLBAR CAPSULE: Routes, Stops, Alerts, Heatmap, and 2D/3D Mode */}
+        {/* FILTER TOOLBAR CAPSULE: Routes, Stops, Alerts, Heatmap, and Collapse Toggle */}
         <div className="flex items-center gap-2">
           <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-full p-1.5 shadow-lg border border-white/90 dark:border-slate-800/90 flex items-center gap-1">
+            <button
+              onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+              className={`p-1.5 rounded-full transition-all cursor-pointer flex items-center justify-center ${
+                isSidebarCollapsed 
+                  ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-950 shadow-md hover:scale-110' 
+                  : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+              }`}
+              title={isSidebarCollapsed ? "Expand Sidebar Cards" : "Collapse Sidebar Cards"}
+            >
+              <AlignJustify size={14} />
+            </button>
+
             <button
               onClick={() => setActiveFilters(prev => ({ ...prev, routes: !prev.routes }))}
               className={`px-3 py-1 text-xs font-bold rounded-full transition-all cursor-pointer ${
@@ -1002,27 +1036,6 @@ export default function LiveMap() {
               Heatmap
             </button>
 
-            {/* 2D / 3D Perspective Mode Pill Switcher */}
-            <div className="flex items-center gap-0.5 bg-slate-200/80 dark:bg-slate-800/80 p-0.5 rounded-full border border-slate-300 dark:border-slate-700 ml-1">
-              <button
-                onClick={() => handleToggleDimension('2D')}
-                className={`px-2.5 py-0.5 text-[11px] font-extrabold rounded-full transition-all cursor-pointer ${
-                  mapDimension === '2D' ? 'bg-slate-900 text-white shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
-                }`}
-              >
-                2D
-              </button>
-              <button
-                onClick={() => handleToggleDimension('3D')}
-                className={`px-2.5 py-0.5 text-[11px] font-extrabold rounded-full transition-all cursor-pointer flex items-center gap-1 ${
-                  mapDimension === '3D' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
-                }`}
-              >
-                <Box size={10} />
-                3D
-              </button>
-            </div>
-
             <button
               onClick={handleToggleFloodDetour}
               className={`px-3 py-1 text-xs font-bold rounded-full transition-all cursor-pointer flex items-center gap-1 ${
@@ -1052,8 +1065,10 @@ export default function LiveMap() {
           </button>
         </div>
 
-        {/* CARD 1: Network Status */}
-        <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-white/90 dark:border-slate-800/90 rounded-2xl p-4 shadow-lg shadow-slate-900/5 transition-all">
+        {/* STACK OF FIGMA CARDS (Collapsible) */}
+        <div className={`w-80 space-y-3 transition-all duration-300 transform ${isSidebarCollapsed ? '-translate-x-[360px] opacity-0 pointer-events-none' : 'translate-x-0 opacity-100'}`}>
+          {/* CARD 1: Network Status */}
+          <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-white/90 dark:border-slate-800/90 rounded-2xl p-4 shadow-lg shadow-slate-900/5 transition-all">
           <div className="flex items-center justify-between mb-3">
             <span className="text-[11px] font-extrabold text-slate-800 dark:text-slate-100 tracking-tight">
               Network Status
@@ -1264,6 +1279,7 @@ export default function LiveMap() {
               </span>
             </div>
           </div>
+        </div>
         </div>
 
       </div>
