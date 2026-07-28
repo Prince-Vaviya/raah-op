@@ -18,7 +18,8 @@ import {
   TrendingUp,
   Activity,
   Layers,
-  Eye
+  Eye,
+  Box
 } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import Map, { Source, Layer, Marker } from "react-map-gl/maplibre";
@@ -158,6 +159,39 @@ export default function RouteInspector() {
   const [showToast, setShowToast] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'Overview' | 'Buses' | 'Stops' | 'Performance'>('Overview');
   const [mapMode, setMapMode] = useState<'live' | 'heatmap'>('live');
+  const [mapDimension, setMapDimension] = useState<'2D' | '3D'>('2D');
+  const [isDarkMode, setIsDarkMode] = useState(false);
+
+  useEffect(() => {
+    const checkDark = () => {
+      setIsDarkMode(document.documentElement.classList.contains('dark'));
+    };
+    checkDark();
+    const observer = new MutationObserver(checkDark);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    return () => observer.disconnect();
+  }, []);
+
+  const handleToggleDimension = (mode: '2D' | '3D') => {
+    setMapDimension(mode);
+    if (mapRef.current) {
+      if (mode === '3D') {
+        mapRef.current.flyTo({
+          pitch: 65,
+          bearing: -20,
+          zoom: 14.5,
+          duration: 1500
+        });
+      } else {
+        mapRef.current.flyTo({
+          pitch: 0,
+          bearing: 0,
+          zoom: 11.5,
+          duration: 1500
+        });
+      }
+    }
+  };
 
   // ── Fetch routes & live telemetry from Backend ──
   useEffect(() => {
@@ -389,6 +423,8 @@ export default function RouteInspector() {
     setTimeout(() => setShowToast(null), 4000);
   };
 
+  const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || "pk.eyJ1IjoiaYWthc2hpa2F0YWtlIiwiYSI6ImNtOW0xZjhiaTBsNm0ycXI0a29mNDdsYm4ifQ.O7T7sS0f1S1k2x-y53x9aQ";
+
   return (
     <div className="relative w-full h-screen overflow-hidden bg-slate-100 dark:bg-slate-950 font-sans text-slate-800 dark:text-slate-100 flex flex-col">
       
@@ -401,10 +437,47 @@ export default function RouteInspector() {
             latitude: 19.0760,
             zoom: 11.5
           }}
-          mapStyle="https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json"
+          mapStyle={
+            mapDimension === '3D'
+              ? isDarkMode
+                ? "https://tiles.openfreemap.org/styles/dark"
+                : "https://tiles.openfreemap.org/styles/bright"
+              : isDarkMode
+                ? "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json"
+                : "https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json"
+          }
           mapLib={maplibregl}
           style={{ width: "100%", height: "100%" }}
         >
+          {/* Real 3D Vector Building Extrusions Layer (Synced with Light & Dark Navbar Theme) */}
+          {mapDimension === '3D' && (
+            <Source 
+              id="3d-buildings-inspector" 
+              type="vector" 
+              url="https://tiles.openfreemap.org/planet"
+            >
+              <Layer
+                id="3d-buildings-inspector-layer"
+                source-layer="building"
+                type="fill-extrusion"
+                minzoom={12}
+                paint={{
+                  'fill-extrusion-color': [
+                    'interpolate',
+                    ['linear'],
+                    ['get', 'render_min_height'],
+                    0, isDarkMode ? '#0f172a' : '#e2e8f0',
+                    20, isDarkMode ? '#1e293b' : '#cbd5e1',
+                    50, isDarkMode ? '#334155' : '#94a3b8',
+                    100, isDarkMode ? '#475569' : '#64748b'
+                  ],
+                  'fill-extrusion-height': ['get', 'render_height'],
+                  'fill-extrusion-base': ['get', 'render_min_height'],
+                  'fill-extrusion-opacity': 0.85
+                }}
+              />
+            </Source>
+          )}
           {routePolyline && (
             <Source id="route-path" type="geojson" data={routePolyline}>
               <Layer 
@@ -541,6 +614,27 @@ export default function RouteInspector() {
             <Layers size={12} />
             Heatmap
           </button>
+
+          {/* 2D / 3D Perspective Mode Pill Switcher */}
+          <div className="flex items-center gap-0.5 bg-slate-200/80 dark:bg-slate-800/80 p-0.5 rounded-full border border-slate-300 dark:border-slate-700 ml-1">
+            <button
+              onClick={() => handleToggleDimension('2D')}
+              className={`px-2.5 py-0.5 text-[11px] font-extrabold rounded-full transition-all cursor-pointer ${
+                mapDimension === '2D' ? 'bg-slate-900 text-white shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+              }`}
+            >
+              2D
+            </button>
+            <button
+              onClick={() => handleToggleDimension('3D')}
+              className={`px-2.5 py-0.5 text-[11px] font-extrabold rounded-full transition-all cursor-pointer flex items-center gap-1 ${
+                mapDimension === '3D' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+              }`}
+            >
+              <Box size={10} />
+              3D
+            </button>
+          </div>
         </div>
       </div>
 
